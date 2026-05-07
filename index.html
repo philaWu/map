@@ -1284,6 +1284,11 @@ function loadCards() {
   if (foodRaw) {
     try {
       var foodData = JSON.parse(foodRaw);
+      var origLen = foodData.length;
+      foodData = foodData.filter(function(c) {
+        return /[一-鿿]/.test(c.title) || !/[À-ÿ]/.test(c.title + (c.note||''));
+      });
+      if (foodData.length < origLen) localStorage.setItem('couple_food_cards', JSON.stringify(foodData));
       var container = document.getElementById('food-cards');
       container.innerHTML = '';
       foodData.forEach(function(c) {
@@ -1310,6 +1315,11 @@ var playRaw = localStorage.getItem('couple_play_cards');
 if (playRaw) {
   try {
     var playData = JSON.parse(playRaw);
+    var pOrigLen = playData.length;
+    playData = playData.filter(function(c) {
+      return /[一-鿿]/.test(c.title) || !/[À-ÿ]/.test(c.title + (c.note||''));
+    });
+    if (playData.length < pOrigLen) localStorage.setItem('couple_play_cards', JSON.stringify(playData));
     var pContainer = document.getElementById('play-cards');
     pContainer.innerHTML = '';
     playData.forEach(function(c) {
@@ -1385,7 +1395,9 @@ function syncFromRemote() {
       var localTitles = localFood.map(function(f) { return f.title; });
       var foodChanged = false;
       remote.food.forEach(function(f) {
-        if (localTitles.indexOf(f.title) === -1) { localFood.push(f); foodChanged = true; }
+        if (/[一-鿿]/.test(f.title) || !/[À-ÿ]/.test(f.title + (f.note||''))) {
+          if (localTitles.indexOf(f.title) === -1) { localFood.push(f); foodChanged = true; }
+        }
       });
       if (foodChanged) { localStorage.setItem('couple_food_cards', JSON.stringify(localFood)); changed = true; }
 
@@ -1396,7 +1408,9 @@ function syncFromRemote() {
       var localPTitles = localPlay.map(function(p) { return p.title; });
       var playChanged = false;
       remote.play.forEach(function(p) {
-        if (localPTitles.indexOf(p.title) === -1) { localPlay.push(p); playChanged = true; }
+        if (/[一-鿿]/.test(p.title) || !/[À-ÿ]/.test(p.title + (p.note||''))) {
+          if (localPTitles.indexOf(p.title) === -1) { localPlay.push(p); playChanged = true; }
+        }
       });
       if (playChanged) { localStorage.setItem('couple_play_cards', JSON.stringify(localPlay)); changed = true; }
 
