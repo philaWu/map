@@ -1332,6 +1332,7 @@ document.getElementById('add-play-btn').addEventListener('click', function() { a
 });
 
 function syncFromRemote() {
+  if (_syncBusy) return;
   var localVersion = parseInt(localStorage.getItem('couple_data_version') || '0');
   fetch('data.json')
     .then(function(r) { return r.json(); })
@@ -1487,12 +1488,73 @@ function processTravelPhotos(token, owner, repo, travelData, statusFn) {
   });
 }
 
+var _syncBusy = false;
+
+function pushDataJson(token, owner, repo, path, sha, ver, travel, food, play, retries) {
+  var newData = { version: ver, travel: travel, food: food, play: play };
+  var jsonStr = JSON.stringify(newData, null, 2);
+  var content = btoa(unescape(encodeURIComponent(jsonStr)));
+  return fetch('https://api.github.com/repos/' + owner + '/' + repo + '/contents/' + path, {
+    method: 'PUT',
+    headers: { Authorization: 'token ' + token, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ message: 'Update data.json v' + ver, content: content, sha: sha })
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(result) {
+    if (result.content) return { result: result, version: ver };
+    if (retries < 2 && !result.content && result.message) {
+      // SHA conflict — re-fetch and retry
+      return fetch('https://api.github.com/repos/' + owner + '/' + repo + '/contents/' + path, {
+        headers: { Authorization: 'token ' + token }
+      })
+      .then(function(r) { return r.json(); })
+      .then(function(file) {
+        if (!file.sha) throw new Error('Failed to re-fetch for retry');
+        var current = JSON.parse(atob(file.content));
+        // Merge our cleaned travel into the latest remote
+        var mergedTravel = JSON.parse(JSON.stringify(travel));
+        Object.keys(current.travel).forEach(function(prov) {
+          if (!mergedTravel[prov]) { mergedTravel[prov] = current.travel[prov]; return; }
+          Object.keys(current.travel[prov]).forEach(function(city) {
+            if (!mergedTravel[prov][city]) {
+              mergedTravel[prov][city] = current.travel[prov][city];
+            } else {
+              var rInfo = current.travel[prov][city];
+              var mInfo = mergedTravel[prov][city];
+              var rP = rInfo.photos ? rInfo.photos.length : 0;
+              var mP = mInfo.photos ? mInfo.photos.length : 0;
+              if (rP > mP) { mInfo.photos = rInfo.photos.slice(); }
+              if (!mInfo.date && rInfo.date) { mInfo.date = rInfo.date; }
+              if (!mInfo.note && rInfo.note) { mInfo.note = rInfo.note; }
+            }
+          });
+        });
+        var mergedFood = food.slice();
+        var foodTitles = mergedFood.map(function(f) { return f.title; });
+        (current.food || []).forEach(function(f) {
+          if (foodTitles.indexOf(f.title) === -1) { mergedFood.push(f); }
+        });
+        var mergedPlay = play.slice();
+        var playTitles = mergedPlay.map(function(p) { return p.title; });
+        (current.play || []).forEach(function(p) {
+          if (playTitles.indexOf(p.title) === -1) { mergedPlay.push(p); }
+        });
+        var newVer = Math.max(ver, (current.version || 0)) + 1;
+        return pushDataJson(token, owner, repo, path, file.sha, newVer, mergedTravel, mergedFood, mergedPlay, retries + 1);
+      });
+    }
+    throw new Error(result.message || 'Unknown error');
+  });
+}
+
 function syncToCloud() {
+  if (_syncBusy) { alert('同步正在进行中，请稍候...'); return; }
   var token = localStorage.getItem('gh_token');
   if (!token) { alert('请先点击 ⚙️ 设置 输入 GitHub Token'); showSettings(); return; }
   var btn = document.getElementById('sync-btn');
   btn.textContent = '⏳ 同步中...';
   btn.disabled = true;
+  _syncBusy = true;
 
   // Collect current data
   var t = {};
@@ -1572,30 +1634,22 @@ function syncToCloud() {
       try {
         localStorage.setItem('couple_travel_cities_v3', JSON.stringify(cleanTravel));
       } catch(e) {}
-      var newData = { version: newVer, travel: cleanTravel, food: mergedFood, play: mergedPlay };
-      var jsonStr = JSON.stringify(newData, null, 2);
-      var content = btoa(unescape(encodeURIComponent(jsonStr)));
-      return fetch('https://api.github.com/repos/' + owner + '/' + repo + '/contents/' + path, {
-        method: 'PUT',
-        headers: { Authorization: 'token ' + token, 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          message: 'Update data.json v' + newVer,
-          content: content,
-          sha: file.sha
-        })
-      }).then(function(r) { return r.json(); });
+      // Push data.json with retry on SHA conflict
+      return pushDataJson(token, owner, repo, path, file.sha, newVer, cleanTravel, mergedFood, mergedPlay, 0);
     });
   })
-  .then(function(result) {
-    if (result.content) {
-      localStorage.setItem('couple_data_version', newVer);
+  .then(function(resp) {
+    if (resp.result && resp.result.content) {
+      localStorage.setItem('couple_data_version', resp.version);
       btn.textContent = '✅ 已同步!';
+      _syncBusy = false;
       setTimeout(function() { location.reload(); }, 1000);
     } else {
-      throw new Error(result.message || 'Unknown error');
+      throw new Error((resp.result && resp.result.message) || 'Unknown error');
     }
   })
   .catch(function(err) {
+    _syncBusy = false;
     btn.textContent = '☁️ 同步到云端';
     btn.disabled = false;
     alert('同步失败: ' + (err.message || '网络错误'));
