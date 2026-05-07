@@ -492,6 +492,11 @@ document.querySelectorAll('.tab').forEach(function(tab) {
     if (raw) {
       try {
         visitedCities = JSON.parse(raw);
+        var cleaned = false;
+        // 清理乱码省份条目
+        Object.keys(visitedCities).forEach(function(prov) {
+          if (!adcodeMap[prov]) { delete visitedCities[prov]; cleaned = true; }
+        });
         // 迁移旧 photo 字段到 photos 数组
         Object.keys(visitedCities).forEach(function(prov) {
           Object.keys(visitedCities[prov]).forEach(function(city) {
@@ -503,6 +508,7 @@ document.querySelectorAll('.tab').forEach(function(tab) {
             if (!info.photos) info.photos = [];
           });
         });
+        if (cleaned) saveVisited();
         return;
       } catch(e) {}
     }
