@@ -720,14 +720,7 @@ document.querySelectorAll('.tab').forEach(function(tab) {
     });
 
     var series = [{
-      type: 'map', map: 'china', roam: true,
-      zoom: 1.15, center: [104.5, 36],
-      label: { show: false },
-      emphasis: {
-        label: { show: true, color: '#c62828', fontSize: 13 },
-        itemStyle: { areaColor: '#f48fb1', borderColor: '#c62828', borderWidth: 1.5 }
-      },
-      itemStyle: { borderColor: '#ddd', borderWidth: 1 },
+      type: 'map', map: 'china', geoIndex: 0,
       selectedMode: false,
       data: data
     }];
@@ -771,6 +764,18 @@ document.querySelectorAll('.tab').forEach(function(tab) {
 
     chart.clear();
     chart.setOption({
+      geo: {
+        map: 'china',
+        roam: true,
+        zoom: 1.15,
+        center: [104.5, 36],
+        label: { show: false },
+        emphasis: {
+          label: { show: true, color: '#c62828', fontSize: 13 },
+          itemStyle: { areaColor: '#f48fb1', borderColor: '#c62828', borderWidth: 1.5 }
+        },
+        itemStyle: { borderColor: '#ddd', borderWidth: 1 }
+      },
       tooltip: {
         trigger: 'item',
         formatter: function(p) {
