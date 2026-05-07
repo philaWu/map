@@ -739,11 +739,11 @@ document.querySelectorAll('.tab').forEach(function(tab) {
       zlevel: 2
     });
 
-    // Transport mode colors and labels
+    // Transport mode colors, labels and symbols
     var transportStyles = {
-      car:   { color: '#43a047', label: '🚗 汽车' },
-      train: { color: '#fb8c00', label: '🚄 高铁' },
-      plane: { color: '#1e88e5', label: '✈️ 飞机' }
+      car:   { color: '#43a047', label: '🚗 汽车', symbol: 'triangle' },
+      train: { color: '#fb8c00', label: '🚄 高铁', symbol: 'rect' },
+      plane: { color: '#1e88e5', label: '✈️ 飞机', symbol: 'diamond' }
     };
 
     // Add arc lines per transport mode
@@ -756,7 +756,7 @@ document.querySelectorAll('.tab').forEach(function(tab) {
           coordinateSystem: 'geo',
           data: arcByTransport[mode],
           lineStyle: { curveness: 0.25, color: style.color, width: 2.5, opacity: 0.9 },
-          effect: { show: true, period: 5, symbol: 'arrow', symbolSize: 6, color: style.color, trailLength: 0.25 },
+          effect: { show: true, period: 5, symbol: style.symbol, symbolSize: 7, color: style.color, trailLength: 0.25 },
           zlevel: 1
         });
       }
