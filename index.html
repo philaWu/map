@@ -1057,6 +1057,9 @@ document.querySelectorAll('.tab').forEach(function(tab) {
 
   // 窗口大小变化时重绘
   window.addEventListener('resize', function() { chart.resize(); });
+
+  // 暴露数据供导出使用
+  window.getVisitedCities = function() { return visitedCities; };
 })();
 
 // ===== 美食 & 玩乐 =====
@@ -1243,7 +1246,7 @@ function exportData() {
     });
   });
   var data = {
-    travel: visitedCities,
+    travel: window.getVisitedCities ? window.getVisitedCities() : {},
     food: foodCards,
     play: playCards
   };
