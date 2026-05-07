@@ -534,7 +534,7 @@ document.querySelectorAll('.tab').forEach(function(tab) {
   backBtn.addEventListener('click', function() { showCountry(); });
 
   // 加载全国 GeoJSON
-  fetch('https://geo.datav.aliyun.com/areas_v3/bound/100000_full.json')
+  fetch('https://geo.datav.aliyun.com/areas_v3/bound/100000_full.json', {referrerPolicy: 'no-referrer'})
     .then(function(r) { return r.json(); })
     .then(function(geo) {
       nationalGeoJson = geo;
@@ -615,7 +615,7 @@ document.querySelectorAll('.tab').forEach(function(tab) {
     } else {
       var adcode = adcodeMap[prov];
       if (adcode) {
-        fetch('https://geo.datav.aliyun.com/areas_v3/bound/' + adcode + '_full.json')
+        fetch('https://geo.datav.aliyun.com/areas_v3/bound/' + adcode + '_full.json', {referrerPolicy: 'no-referrer'})
           .then(function(r) { return r.json(); })
           .then(function(geo) {
             cityGeoCache[prov] = geo;
