@@ -527,7 +527,9 @@ document.querySelectorAll('.tab').forEach(function(tab) {
   function saveVisited() {
     try {
       localStorage.setItem('couple_travel_cities_v3', JSON.stringify(visitedCities));
-      localStorage.setItem('couple_data_version', '1');
+      // 保持当前版本号，不重置为1（避免触发不必要的远程同步刷新）
+      var curVer = parseInt(localStorage.getItem('couple_data_version') || '0');
+      localStorage.setItem('couple_data_version', curVer);
     } catch(e) {
       alert('存储空间不足！请删除一些照片后再试。');
     }
@@ -1272,7 +1274,9 @@ function saveCards() {
     });
   });
   localStorage.setItem('couple_play_cards', JSON.stringify(play));
-  localStorage.setItem('couple_data_version', '1');
+  // 保持当前版本号，不重置
+  var curVer = parseInt(localStorage.getItem('couple_data_version') || '0');
+  localStorage.setItem('couple_data_version', curVer);
 }
 
 function loadCards() {
