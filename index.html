@@ -519,8 +519,12 @@ document.querySelectorAll('.tab').forEach(function(tab) {
   }
 
   function saveVisited() {
-    localStorage.setItem('couple_travel_cities_v3', JSON.stringify(visitedCities));
-    localStorage.setItem('couple_data_version', '1');
+    try {
+      localStorage.setItem('couple_travel_cities_v3', JSON.stringify(visitedCities));
+      localStorage.setItem('couple_data_version', '1');
+    } catch(e) {
+      alert('存储空间不足！请删除一些照片后再试。');
+    }
   }
 
   loadVisited();
@@ -1335,16 +1339,29 @@ function syncFromRemote() {
       if (remote.version <= localVersion) return;
       var changed = false;
 
-      // Merge travel
+      // Merge travel — update existing cities too, not just new ones
       var localTravel = {};
       var raw = localStorage.getItem('couple_travel_cities_v3');
       if (raw) { try { localTravel = JSON.parse(raw); } catch(e) {} }
       Object.keys(remote.travel).forEach(function(prov) {
         if (!localTravel[prov]) { localTravel[prov] = {}; changed = true; }
         Object.keys(remote.travel[prov]).forEach(function(city) {
+          var rInfo = remote.travel[prov][city];
           if (!localTravel[prov][city]) {
-            localTravel[prov][city] = remote.travel[prov][city];
+            // New city — add from remote
+            localTravel[prov][city] = rInfo;
             changed = true;
+          } else {
+            // Existing city — merge: prefer remote if it has more data
+            var lInfo = localTravel[prov][city];
+            var rPhotos = rInfo.photos ? rInfo.photos.length : 0;
+            var lPhotos = lInfo.photos ? lInfo.photos.length : 0;
+            if (rPhotos > lPhotos) {
+              lInfo.photos = rInfo.photos.slice();
+              changed = true;
+            }
+            if (!lInfo.date && rInfo.date) { lInfo.date = rInfo.date; changed = true; }
+            if (!lInfo.note && rInfo.note) { lInfo.note = rInfo.note; changed = true; }
           }
         });
       });
@@ -1456,12 +1473,22 @@ function syncToCloud() {
     newVer = (current.version || 0) + 1;
 
     // Merge: local edits take priority, but don't lose remote additions
-    // Merge travel
+    // Merge travel — for existing cities, merge photo/date/note data
     var mergedTravel = JSON.parse(JSON.stringify(t));
     Object.keys(current.travel).forEach(function(prov) {
       if (!mergedTravel[prov]) { mergedTravel[prov] = current.travel[prov]; return; }
       Object.keys(current.travel[prov]).forEach(function(city) {
-        if (!mergedTravel[prov][city]) { mergedTravel[prov][city] = current.travel[prov][city]; }
+        var rInfo = current.travel[prov][city];
+        if (!mergedTravel[prov][city]) {
+          mergedTravel[prov][city] = rInfo;
+        } else {
+          var mInfo = mergedTravel[prov][city];
+          var rPhotos = rInfo.photos ? rInfo.photos.length : 0;
+          var mPhotos = mInfo.photos ? mInfo.photos.length : 0;
+          if (rPhotos > mPhotos) { mInfo.photos = rInfo.photos.slice(); }
+          if (!mInfo.date && rInfo.date) { mInfo.date = rInfo.date; }
+          if (!mInfo.note && rInfo.note) { mInfo.note = rInfo.note; }
+        }
       });
     });
 
