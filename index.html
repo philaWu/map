@@ -653,6 +653,44 @@ document.querySelectorAll('.tab').forEach(function(tab) {
     updateCounts();
   });
 
+  // 城市坐标查找表（用于绘制弧线）
+  var cityCoords = {
+    '上海市': [121.47, 31.23], '浦东新区': [121.54, 31.24],
+    '杭州市': [120.15, 30.28], '南宁市': [108.32, 22.82],
+    '盐城市': [120.16, 33.35], '苏州市': [120.59, 31.30],
+    '许昌市': [113.85, 34.04], '大连市': [121.61, 38.91],
+    '北京市': [116.40, 39.90], '天津市': [117.20, 39.13],
+    '重庆市': [106.55, 29.57], '成都市': [104.07, 30.67],
+    '广州市': [113.26, 23.13], '深圳市': [114.07, 22.55],
+    '武汉市': [114.30, 30.60], '西安市': [108.94, 34.26],
+    '长沙市': [112.97, 28.23], '南京市': [118.80, 32.06],
+    '合肥市': [117.23, 31.82], '福州市': [119.30, 26.08],
+    '南昌市': [115.86, 28.68], '济南市': [116.99, 36.67],
+    '郑州市': [113.62, 34.75], '贵阳市': [106.71, 26.57],
+    '昆明市': [102.71, 25.04], '兰州市': [103.83, 36.06],
+    '西宁市': [101.78, 36.62], '沈阳市': [123.43, 41.80],
+    '长春市': [125.32, 43.90], '哈尔滨市': [126.53, 45.80],
+    '太原市': [112.55, 37.87], '石家庄市': [114.50, 38.04],
+    '呼和浩特市': [111.75, 40.84], '乌鲁木齐市': [87.62, 43.82],
+    '拉萨市': [91.17, 29.65], '银川市': [106.23, 38.49],
+    '海口市': [110.20, 20.03], '香港': [114.17, 22.28]
+  };
+
+  function getCityCoord(province, city) {
+    if (cityCoords[city]) return cityCoords[city];
+    // Fallback: try to get from province GeoJSON cache
+    if (cityGeoCache[province]) {
+      var features = cityGeoCache[province].features;
+      for (var i = 0; i < features.length; i++) {
+        if (features[i].properties.name === city) {
+          var cp = features[i].properties.cp || features[i].properties.center;
+          if (cp) { cityCoords[city] = cp; return cp; }
+        }
+      }
+    }
+    return null;
+  }
+
   // === 全国视图 ===
   function showCountry() {
     currentLevel = 'country';
@@ -666,11 +704,78 @@ document.querySelectorAll('.tab').forEach(function(tab) {
       data.push({ name: name, value: cnt });
     });
 
+    // Build arc lines from starting point (Shanghai) to each visited city
+    var startCoord = cityCoords['上海市'] || [121.47, 31.23];
+    var arcData = [];
+    var visitedMarkers = [];
+    Object.keys(visitedCities).forEach(function(prov) {
+      Object.keys(visitedCities[prov]).forEach(function(city) {
+        if (prov === '上海市' && city === '浦东新区') return; // Skip Shanghai itself
+        var coord = getCityCoord(prov, city);
+        if (coord) {
+          arcData.push({ coords: [startCoord, coord] });
+          visitedMarkers.push({ name: city, value: coord });
+        }
+      });
+    });
+
+    var series = [{
+      type: 'map', map: 'china', roam: true,
+      zoom: 1.15, center: [104.5, 36],
+      label: { show: false },
+      emphasis: {
+        label: { show: true, color: '#c62828', fontSize: 13 },
+        itemStyle: { areaColor: '#f48fb1', borderColor: '#c62828', borderWidth: 1.5 }
+      },
+      itemStyle: { borderColor: '#ddd', borderWidth: 1 },
+      selectedMode: false,
+      data: data
+    }];
+
+    // Add starting point marker (Shanghai)
+    series.push({
+      type: 'scatter',
+      coordinateSystem: 'geo',
+      data: [{ name: '起始点 ❤️ 上海', value: startCoord }],
+      symbol: 'pin',
+      symbolSize: 28,
+      itemStyle: { color: '#c62828' },
+      label: { show: true, position: 'right', formatter: '🏠 我们的起点', color: '#c62828', fontSize: 12, fontWeight: 'bold' },
+      zlevel: 2
+    });
+
+    // Add arc lines
+    if (arcData.length > 0) {
+      series.push({
+        type: 'lines',
+        coordinateSystem: 'geo',
+        data: arcData,
+        lineStyle: { curveness: 0.25, color: '#e91e63', width: 1.5, opacity: 0.6 },
+        effect: { show: true, period: 4, symbol: 'arrow', symbolSize: 5, color: '#e91e63', trailLength: 0.1 },
+        zlevel: 1
+      });
+    }
+
+    // Add visited city markers
+    if (visitedMarkers.length > 0) {
+      series.push({
+        type: 'scatter',
+        coordinateSystem: 'geo',
+        data: visitedMarkers,
+        symbol: 'pin',
+        symbolSize: 14,
+        itemStyle: { color: '#e91e63' },
+        zlevel: 2
+      });
+    }
+
     chart.clear();
     chart.setOption({
       tooltip: {
         trigger: 'item',
         formatter: function(p) {
+          if (p.seriesType === 'scatter') return '<b>' + p.name + '</b>';
+          if (p.seriesType === 'lines') return '已走过';
           var cnt = provinceVisitedCount(p.name);
           if (cnt > 0) return '<b>' + p.name + '</b><br/>💗 已去过 ' + cnt + ' 个城市<br/><small>点击查看城市</small>';
           return '<b>' + p.name + '</b><br/>🤍 还没去过<br/><small>点击查看城市</small>';
@@ -683,18 +788,7 @@ document.querySelectorAll('.tab').forEach(function(tab) {
         show: false, min: 0, max: 5,
         inRange: { color: ['#f5f5f5', '#e91e63'] }
       },
-      series: [{
-        type: 'map', map: 'china', roam: true,
-        zoom: 1.15, center: [104.5, 36],
-        label: { show: false },
-        emphasis: {
-          label: { show: true, color: '#c62828', fontSize: 13 },
-          itemStyle: { areaColor: '#f48fb1', borderColor: '#c62828', borderWidth: 1.5 }
-        },
-        itemStyle: { borderColor: '#ddd', borderWidth: 1 },
-        selectedMode: false,
-        data: data
-      }]
+      series: series
     }, true);
 
     chart.off('click');
