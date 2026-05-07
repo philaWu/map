@@ -296,7 +296,6 @@
   <h1 class="title">我们的故事</h1>
   <p class="subtitle">每一次旅行 · 每一顿美食 · 每一次玩乐</p>
   <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:10px;">
-    <button onclick="exportData()" style="padding:8px 16px;border-radius:20px;border:2px solid #e91e63;background:#fff;color:#e91e63;cursor:pointer;font-size:0.85rem;font-weight:600;transition:all 0.2s;" onmouseover="this.style.background='#e91e63';this.style.color='#fff'" onmouseout="this.style.background='#fff';this.style.color='#e91e63'">📥 导出</button>
     <button onclick="showSettings()" style="padding:8px 16px;border-radius:20px;border:2px solid #9c27b0;background:#fff;color:#9c27b0;cursor:pointer;font-size:0.85rem;font-weight:600;transition:all 0.2s;" onmouseover="this.style.background='#9c27b0';this.style.color='#fff'" onmouseout="this.style.background='#fff';this.style.color='#9c27b0'">⚙️ 设置</button>
     <button onclick="syncToCloud()" id="sync-btn" style="padding:8px 16px;border-radius:20px;border:none;background:linear-gradient(135deg,#4CAF50,#2E7D32);color:#fff;cursor:pointer;font-size:0.85rem;font-weight:600;transition:all 0.2s;box-shadow:0 2px 10px rgba(76,175,80,0.3);" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 4px 15px rgba(76,175,80,0.4)'" onmouseout="this.style.transform='';this.style.boxShadow='0 2px 10px rgba(76,175,80,0.3)'">☁️ 同步到云端</button>
   </div>
@@ -1230,65 +1229,6 @@ document.getElementById('add-play-btn').addEventListener('click', function() { a
     }
   });
 });
-
-function exportData() {
-  var foodCards = [];
-  document.querySelectorAll('#food-cards .card').forEach(function(card) {
-    foodCards.push({
-      emoji: card.querySelector('.emoji') ? card.querySelector('.emoji').textContent : '',
-      title: card.querySelector('.card-title') ? card.querySelector('.card-title').textContent : '',
-      date: card.querySelector('.card-date') ? card.querySelector('.card-date').textContent : '',
-      location: card.querySelector('.card-location') ? card.querySelector('.card-location').textContent : '',
-      note: card.querySelector('.card-note') ? card.querySelector('.card-note').textContent : '',
-      rating: card.querySelector('.card-rating') ? card.querySelector('.card-rating').textContent : ''
-    });
-  });
-  var playCards = [];
-  document.querySelectorAll('#play-cards .card').forEach(function(card) {
-    playCards.push({
-      emoji: card.querySelector('.emoji') ? card.querySelector('.emoji').textContent : '',
-      title: card.querySelector('.card-title') ? card.querySelector('.card-title').textContent : '',
-      date: card.querySelector('.card-date') ? card.querySelector('.card-date').textContent : '',
-      location: card.querySelector('.card-location') ? card.querySelector('.card-location').textContent : '',
-      note: card.querySelector('.card-note') ? card.querySelector('.card-note').textContent : '',
-      rating: card.querySelector('.card-rating') ? card.querySelector('.card-rating').textContent : ''
-    });
-  });
-  var data = {
-    travel: window.getVisitedCities ? window.getVisitedCities() : {},
-    food: foodCards,
-    play: playCards
-  };
-  var jsonStr = JSON.stringify(data, null, 2);
-
-  // Show in modal
-  var overlay = document.createElement('div');
-  overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center';
-  overlay.onclick = function(e) { if (e.target === overlay) overlay.remove(); };
-  var box = document.createElement('div');
-  box.style.cssText = 'background:#fff;border-radius:16px;padding:20px;max-width:600px;width:90%;max-height:80vh;display:flex;flex-direction:column;gap:10px';
-  box.innerHTML = '<h3 style="margin:0;color:#ad1457;">📥 导出数据</h3><p style="margin:0;color:#888;font-size:0.8rem;">复制下方的 JSON 数据发给 Claude，它会帮你嵌入到网页中</p>';
-  box.innerHTML += '<textarea readonly style="width:100%;height:300px;border:2px solid #f8bbd0;border-radius:10px;padding:10px;font-size:0.75rem;font-family:monospace;resize:vertical;">' + jsonStr + '</textarea>';
-  var btnRow = document.createElement('div');
-  btnRow.style.cssText = 'display:flex;gap:10px;justify-content:flex-end';
-  var copyBtn = document.createElement('button');
-  copyBtn.textContent = '📋 一键复制';
-  copyBtn.style.cssText = 'padding:8px 16px;border-radius:20px;border:none;background:#e91e63;color:#fff;cursor:pointer;font-size:0.85rem;font-weight:600';
-  copyBtn.onclick = function() {
-    navigator.clipboard.writeText(jsonStr).then(function() {
-      copyBtn.textContent = '✅ 已复制!';
-    });
-  };
-  var closeBtn = document.createElement('button');
-  closeBtn.textContent = '关闭';
-  closeBtn.style.cssText = 'padding:8px 16px;border-radius:20px;border:2px solid #e91e63;background:#fff;color:#e91e63;cursor:pointer;font-size:0.85rem;font-weight:600';
-  closeBtn.onclick = function() { overlay.remove(); };
-  btnRow.appendChild(copyBtn);
-  btnRow.appendChild(closeBtn);
-  box.appendChild(btnRow);
-  overlay.appendChild(box);
-  document.body.appendChild(overlay);
-}
 
 function syncFromRemote() {
   var localVersion = parseInt(localStorage.getItem('couple_data_version') || '0');
