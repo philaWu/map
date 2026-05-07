@@ -1,5 +1,5 @@
 {
-  "version": 7,
+  "version": 8,
   "travel": {
     "江苏省": {
       "盐城市": {
@@ -34,8 +34,9 @@
       "南宁市": {
         "date": "",
         "note": "",
-        "photos": [],
-        "transport": "plane"
+        "photos": [
+          "photos/1778158118022_ium7ws.jpg"
+        ]
       }
     },
     "河南省": {
