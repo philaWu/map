@@ -1375,10 +1375,12 @@ function syncFromRemote() {
           } else {
             // Existing city — merge: prefer remote if it has more data
             var lInfo = localTravel[prov][city];
-            var rPhotos = rInfo.photos ? rInfo.photos.length : 0;
-            var lPhotos = lInfo.photos ? lInfo.photos.length : 0;
-            if (rPhotos > lPhotos) {
-              lInfo.photos = rInfo.photos.slice();
+            var rPList = rInfo.photos || [];
+            var lPList = lInfo.photos || [];
+            var lHasBase64 = lPList.some(function(p) { return p.indexOf('data:') === 0; });
+            var rHasBase64 = rPList.some(function(p) { return p.indexOf('data:') === 0; });
+            if ((rPList.length > lPList.length) || (lHasBase64 && !rHasBase64)) {
+              lInfo.photos = rPList.slice();
               changed = true;
             }
             if (!lInfo.date && rInfo.date) { lInfo.date = rInfo.date; changed = true; }
