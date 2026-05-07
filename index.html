@@ -737,15 +737,17 @@ document.querySelectorAll('.tab').forEach(function(tab) {
       zlevel: 2
     });
 
-    // Add arc lines
+    // Arc lines from Shanghai to visited cities
     if (arcData.length > 0) {
       series.push({
         type: 'lines',
         coordinateSystem: 'geo',
+        polyline: false,
         data: arcData,
-        lineStyle: { curveness: 0.25, color: '#d81b60', width: 2.5, opacity: 0.9 },
-        effect: { show: true, period: 5, symbol: 'arrow', symbolSize: 6, color: '#d81b60', trailLength: 0.25 },
-        zlevel: 1
+        silent: true,
+        lineStyle: { curveness: 0.2, color: '#e91e63', width: 2, opacity: 0.8 },
+        effect: { show: true, period: 6, trailLength: 0, symbol: 'arrow', symbolSize: 8, color: '#e91e63' },
+        zlevel: 3
       });
     }
 
@@ -762,7 +764,6 @@ document.querySelectorAll('.tab').forEach(function(tab) {
       });
     }
 
-    chart.clear();
     chart.setOption({
       geo: {
         map: 'china',
