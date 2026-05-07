@@ -295,7 +295,11 @@
   <div class="hearts">💕</div>
   <h1 class="title">我们的故事</h1>
   <p class="subtitle">每一次旅行 · 每一顿美食 · 每一次玩乐</p>
-  <button onclick="exportData()" style="margin-top:10px;padding:8px 20px;border-radius:20px;border:2px solid #e91e63;background:#fff;color:#e91e63;cursor:pointer;font-size:0.85rem;font-weight:600;transition:all 0.2s;" onmouseover="this.style.background='#e91e63';this.style.color='#fff'" onmouseout="this.style.background='#fff';this.style.color='#e91e63'">📥 导出数据</button>
+  <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:10px;">
+    <button onclick="exportData()" style="padding:8px 16px;border-radius:20px;border:2px solid #e91e63;background:#fff;color:#e91e63;cursor:pointer;font-size:0.85rem;font-weight:600;transition:all 0.2s;" onmouseover="this.style.background='#e91e63';this.style.color='#fff'" onmouseout="this.style.background='#fff';this.style.color='#e91e63'">📥 导出</button>
+    <button onclick="showSettings()" style="padding:8px 16px;border-radius:20px;border:2px solid #9c27b0;background:#fff;color:#9c27b0;cursor:pointer;font-size:0.85rem;font-weight:600;transition:all 0.2s;" onmouseover="this.style.background='#9c27b0';this.style.color='#fff'" onmouseout="this.style.background='#fff';this.style.color='#9c27b0'">⚙️ 设置</button>
+    <button onclick="syncToCloud()" id="sync-btn" style="padding:8px 16px;border-radius:20px;border:none;background:linear-gradient(135deg,#4CAF50,#2E7D32);color:#fff;cursor:pointer;font-size:0.85rem;font-weight:600;transition:all 0.2s;box-shadow:0 2px 10px rgba(76,175,80,0.3);" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 4px 15px rgba(76,175,80,0.4)'" onmouseout="this.style.transform='';this.style.boxShadow='0 2px 10px rgba(76,175,80,0.3)'">☁️ 同步到云端</button>
+  </div>
 </div>
 
 <div class="tabs">
@@ -1335,6 +1339,113 @@ function syncFromRemote() {
       if (changed) location.reload();
     })
     .catch(function() {});
+}
+
+function showSettings() {
+  var token = localStorage.getItem('gh_token') || '';
+  var overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center';
+  overlay.onclick = function(e) { if (e.target === overlay) overlay.remove(); };
+  var box = document.createElement('div');
+  box.style.cssText = 'background:#fff;border-radius:16px;padding:20px;max-width:420px;width:90%';
+  box.innerHTML = '<h3 style="margin:0 0 10px;color:#9c27b0;">⚙️ 设置 GitHub Token</h3>' +
+    '<p style="margin:0 0 8px;color:#666;font-size:0.8rem;">输入你的 GitHub Personal Access Token，用于同步数据到云端。</p>' +
+    '<input id="token-input" type="password" style="width:100%;padding:10px;border:2px solid #ce93d8;border-radius:10px;font-size:0.8rem;" placeholder="gho_..." value="' + token + '">';
+  var btnRow = document.createElement('div');
+  btnRow.style.cssText = 'display:flex;gap:8px;justify-content:flex-end;margin-top:12px';
+  var saveBtn = document.createElement('button');
+  saveBtn.textContent = '保存';
+  saveBtn.style.cssText = 'padding:8px 20px;border-radius:20px;border:none;background:#9c27b0;color:#fff;cursor:pointer;font-size:0.85rem;font-weight:600';
+  saveBtn.onclick = function() {
+    localStorage.setItem('gh_token', document.getElementById('token-input').value);
+    overlay.remove();
+    alert('Token 已保存！');
+  };
+  var closeBtn = document.createElement('button');
+  closeBtn.textContent = '取消';
+  closeBtn.style.cssText = 'padding:8px 20px;border-radius:20px;border:2px solid #9c27b0;background:#fff;color:#9c27b0;cursor:pointer;font-size:0.85rem;font-weight:600';
+  closeBtn.onclick = function() { overlay.remove(); };
+  btnRow.appendChild(saveBtn);
+  btnRow.appendChild(closeBtn);
+  box.appendChild(btnRow);
+  overlay.appendChild(box);
+  document.body.appendChild(overlay);
+}
+
+function syncToCloud() {
+  var token = localStorage.getItem('gh_token');
+  if (!token) { alert('请先点击 ⚙️ 设置 输入 GitHub Token'); showSettings(); return; }
+  var btn = document.getElementById('sync-btn');
+  btn.textContent = '⏳ 同步中...';
+  btn.disabled = true;
+
+  // Collect current data
+  var t = {};
+  if (window.getVisitedCities) t = JSON.parse(JSON.stringify(window.getVisitedCities()));
+  var food = [];
+  document.querySelectorAll('#food-cards .card').forEach(function(c) {
+    food.push({
+      emoji: c.querySelector('.emoji') ? c.querySelector('.emoji').textContent : '',
+      title: c.querySelector('.card-title') ? c.querySelector('.card-title').textContent : '',
+      date: c.querySelector('.card-date') ? c.querySelector('.card-date').textContent : '',
+      location: c.querySelector('.card-location') ? c.querySelector('.card-location').textContent : '',
+      note: c.querySelector('.card-note') ? c.querySelector('.card-note').textContent : '',
+      rating: c.querySelector('.card-rating') ? c.querySelector('.card-rating').textContent : ''
+    });
+  });
+  var play = [];
+  document.querySelectorAll('#play-cards .card').forEach(function(c) {
+    play.push({
+      emoji: c.querySelector('.emoji') ? c.querySelector('.emoji').textContent : '',
+      title: c.querySelector('.card-title') ? c.querySelector('.card-title').textContent : '',
+      date: c.querySelector('.card-date') ? c.querySelector('.card-date').textContent : '',
+      location: c.querySelector('.card-location') ? c.querySelector('.card-location').textContent : '',
+      note: c.querySelector('.card-note') ? c.querySelector('.card-note').textContent : '',
+      rating: c.querySelector('.card-rating') ? c.querySelector('.card-rating').textContent : ''
+    });
+  });
+
+  var owner = 'philaWu';
+  var repo = 'map';
+  var path = 'data.json';
+  var newVer;
+
+  fetch('https://api.github.com/repos/' + owner + '/' + repo + '/contents/' + path, {
+    headers: { Authorization: 'token ' + token }
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(file) {
+    var current = JSON.parse(atob(file.content));
+    newVer = (current.version || 0) + 1;
+    var newData = { version: newVer, travel: t, food: food, play: play };
+    var jsonStr = JSON.stringify(newData, null, 2);
+    var content = btoa(unescape(encodeURIComponent(jsonStr)));
+
+    return fetch('https://api.github.com/repos/' + owner + '/' + repo + '/contents/' + path, {
+      method: 'PUT',
+      headers: { Authorization: 'token ' + token, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        message: 'Update data.json v' + newVer,
+        content: content,
+        sha: file.sha
+      })
+    });
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(result) {
+    if (result.content) {
+      localStorage.setItem('couple_data_version', newVer);
+      btn.textContent = '✅ 已同步!';
+      setTimeout(function() { btn.textContent = '☁️ 同步到云端'; btn.disabled = false; }, 2000);
+    } else {
+      throw new Error(result.message || 'Unknown error');
+    }
+  })
+  .catch(function(err) {
+    btn.textContent = '☁️ 同步到云端';
+    btn.disabled = false;
+    alert('同步失败: ' + (err.message || '网络错误'));
+  });
 }
 
 updateCounts();
