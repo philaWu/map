@@ -1,5 +1,5 @@
 {
-  "version": 8,
+  "version": 9,
   "travel": {
     "江苏省": {
       "盐城市": {
@@ -20,14 +20,6 @@
         "photos": [
           "photos/1778158039385_5oxxvj.jpg"
         ]
-      }
-    },
-    "上海市": {
-      "浦东新区": {
-        "date": "",
-        "note": "",
-        "photos": [],
-        "transport": "train"
       }
     },
     "广西壮族自治区": {
@@ -69,6 +61,14 @@
         "note": "",
         "photos": [],
         "transport": "car"
+      }
+    },
+    "上海市": {
+      "浦东新区": {
+        "date": "",
+        "note": "",
+        "photos": [],
+        "transport": "train"
       }
     }
   },
