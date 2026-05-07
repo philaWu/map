@@ -722,10 +722,11 @@ document.querySelectorAll('.tab').forEach(function(tab) {
     var series = [{
       type: 'map', map: 'china', geoIndex: 0,
       selectedMode: false,
-      data: data
+      data: data,
+      z: 1
     }];
 
-    // Add starting point marker (Shanghai)
+    // Starting point marker (Shanghai)
     series.push({
       type: 'scatter',
       coordinateSystem: 'geo',
@@ -734,7 +735,7 @@ document.querySelectorAll('.tab').forEach(function(tab) {
       symbolSize: 28,
       itemStyle: { color: '#c62828' },
       label: { show: true, position: 'right', formatter: '上海', color: '#c62828', fontSize: 12, fontWeight: 'bold' },
-      zlevel: 2
+      z: 10
     });
 
     // Arc lines from Shanghai to visited cities
@@ -745,11 +746,11 @@ document.querySelectorAll('.tab').forEach(function(tab) {
         data: arcData,
         lineStyle: { curveness: 0.2, color: '#b71c1c', width: 5, opacity: 1, type: 'solid' },
         effect: { show: true, period: 6, trailLength: 0.1, symbol: 'arrow', symbolSize: 10, color: '#e91e63' },
-        zlevel: 3
+        z: 5
       });
     }
 
-    // Add visited city markers
+    // Visited city markers
     if (visitedMarkers.length > 0) {
       series.push({
         type: 'scatter',
@@ -758,7 +759,7 @@ document.querySelectorAll('.tab').forEach(function(tab) {
         symbol: 'pin',
         symbolSize: 14,
         itemStyle: { color: '#e91e63' },
-        zlevel: 2
+        z: 10
       });
     }
 
