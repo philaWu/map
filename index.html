@@ -698,12 +698,6 @@ document.querySelectorAll('.tab').forEach(function(tab) {
     backBtn.style.display = 'none';
     breadcrumb.textContent = '';
 
-    var data = [];
-    Object.keys(visitedCities).forEach(function(name) {
-      var cnt = Object.keys(visitedCities[name]).length;
-      data.push({ name: name, value: cnt });
-    });
-
     // Build arc lines from starting point (Shanghai) to each visited city
     var startCoord = cityCoords['上海市'] || [121.47, 31.23];
     var arcData = [];
@@ -719,12 +713,13 @@ document.querySelectorAll('.tab').forEach(function(tab) {
       });
     });
 
-    var series = [{
-      type: 'map', map: 'china', geoIndex: 0,
-      selectedMode: false,
-      data: data,
-      z: 1
-    }];
+    // Build geo regions for province coloring
+    var regions = [];
+    Object.keys(visitedCities).forEach(function(name) {
+      regions.push({ name: name, itemStyle: { areaColor: '#f48fb1' } });
+    });
+
+    var series = [];
 
     // Starting point marker (Shanghai)
     series.push({
@@ -770,36 +765,37 @@ document.querySelectorAll('.tab').forEach(function(tab) {
         zoom: 1.15,
         center: [104.5, 36],
         label: { show: false },
+        regions: regions,
+        itemStyle: { areaColor: '#f5f5f5', borderColor: '#ddd', borderWidth: 1 },
         emphasis: {
           label: { show: true, color: '#c62828', fontSize: 13 },
           itemStyle: { areaColor: '#f48fb1', borderColor: '#c62828', borderWidth: 1.5 }
-        },
-        itemStyle: { borderColor: '#ddd', borderWidth: 1 }
+        }
       },
       tooltip: {
         trigger: 'item',
         formatter: function(p) {
           if (p.seriesType === 'scatter') return '<b>' + p.name + '</b>';
           if (p.seriesType === 'lines') return '已走过';
-          var cnt = provinceVisitedCount(p.name);
-          if (cnt > 0) return '<b>' + p.name + '</b><br/>💗 已去过 ' + cnt + ' 个城市<br/><small>点击查看城市</small>';
-          return '<b>' + p.name + '</b><br/>🤍 还没去过<br/><small>点击查看城市</small>';
+          if (p.name) {
+            var cnt = provinceVisitedCount(p.name);
+            if (cnt > 0) return '<b>' + p.name + '</b><br/>已去过 ' + cnt + ' 个城市<br/><small>点击查看城市</small>';
+            return '<b>' + p.name + '</b><br/>还没去过<br/><small>点击查看城市</small>';
+          }
+          return '';
         },
         backgroundColor: 'rgba(255,255,255,0.95)',
         borderColor: '#f48fb1',
         textStyle: { color: '#880e4f' }
-      },
-      visualMap: {
-        show: false, min: 0, max: 5,
-        inRange: { color: ['rgba(245,245,245,0.15)', 'rgba(233,30,99,0.25)'] }
       },
       series: series
     }, true);
 
     chart.off('click');
     chart.on('click', function(params) {
-      if (params.componentSubType !== 'map') return;
-      drillToCity(params.name);
+      if (params.componentType === 'geo' && params.name) {
+        drillToCity(params.name);
+      }
     });
 
     renderCards();
