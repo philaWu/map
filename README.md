@@ -28,6 +28,7 @@
 - **原生 HTML/CSS/JS** — 无框架依赖
 - **LocalStorage** — 本地数据持久化
 - **响应式设计** — 适配手机与桌面
+- **自动同步** — 从 data.json 拉取最新数据，无需手动导出
 
 ## 🚀 使用方式
 
@@ -37,4 +38,11 @@
 https://philaWu.github.io/map
 ```
 
-所有数据保存在浏览器本地存储中，不会上传到服务器。
+## 📝 更新内容
+
+编辑 `data.json` 文件，修改 `version` 数字（每次 +1），添加新的城市/美食/活动记录。网页会在用户访问时自动拉取并合并新数据。
+
+1. 打开 https://github.com/philaWu/map/edit/master/data.json
+2. 编辑 JSON 内容
+3. 提交保存
+4. 所有用户下次打开网页时自动看到更新

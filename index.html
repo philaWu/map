@@ -516,6 +516,7 @@ document.querySelectorAll('.tab').forEach(function(tab) {
 
   function saveVisited() {
     localStorage.setItem('couple_travel_cities_v3', JSON.stringify(visitedCities));
+    localStorage.setItem('couple_data_version', '1');
   }
 
   loadVisited();
@@ -1161,6 +1162,7 @@ function saveCards() {
     });
   });
   localStorage.setItem('couple_play_cards', JSON.stringify(play));
+  localStorage.setItem('couple_data_version', '1');
 }
 
 function loadCards() {
@@ -1284,7 +1286,59 @@ function exportData() {
   document.body.appendChild(overlay);
 }
 
+function syncFromRemote() {
+  var localVersion = parseInt(localStorage.getItem('couple_data_version') || '0');
+  fetch('data.json')
+    .then(function(r) { return r.json(); })
+    .then(function(remote) {
+      if (remote.version <= localVersion) return;
+      var changed = false;
+
+      // Merge travel
+      var localTravel = {};
+      var raw = localStorage.getItem('couple_travel_cities_v3');
+      if (raw) { try { localTravel = JSON.parse(raw); } catch(e) {} }
+      Object.keys(remote.travel).forEach(function(prov) {
+        if (!localTravel[prov]) { localTravel[prov] = {}; changed = true; }
+        Object.keys(remote.travel[prov]).forEach(function(city) {
+          if (!localTravel[prov][city]) {
+            localTravel[prov][city] = remote.travel[prov][city];
+            changed = true;
+          }
+        });
+      });
+      if (changed) localStorage.setItem('couple_travel_cities_v3', JSON.stringify(localTravel));
+
+      // Merge food
+      var localFood = [];
+      var fRaw = localStorage.getItem('couple_food_cards');
+      if (fRaw) { try { localFood = JSON.parse(fRaw); } catch(e) {} }
+      var localTitles = localFood.map(function(f) { return f.title; });
+      var foodChanged = false;
+      remote.food.forEach(function(f) {
+        if (localTitles.indexOf(f.title) === -1) { localFood.push(f); foodChanged = true; }
+      });
+      if (foodChanged) { localStorage.setItem('couple_food_cards', JSON.stringify(localFood)); changed = true; }
+
+      // Merge play
+      var localPlay = [];
+      var pRaw = localStorage.getItem('couple_play_cards');
+      if (pRaw) { try { localPlay = JSON.parse(pRaw); } catch(e) {} }
+      var localPTitles = localPlay.map(function(p) { return p.title; });
+      var playChanged = false;
+      remote.play.forEach(function(p) {
+        if (localPTitles.indexOf(p.title) === -1) { localPlay.push(p); playChanged = true; }
+      });
+      if (playChanged) { localStorage.setItem('couple_play_cards', JSON.stringify(localPlay)); changed = true; }
+
+      localStorage.setItem('couple_data_version', remote.version);
+      if (changed) location.reload();
+    })
+    .catch(function() {});
+}
+
 updateCounts();
+syncFromRemote();
 </script>
 </body>
 </html>
