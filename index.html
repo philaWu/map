@@ -1359,7 +1359,32 @@ function syncToCloud() {
   .then(function(file) {
     var current = JSON.parse(atob(file.content));
     newVer = (current.version || 0) + 1;
-    var newData = { version: newVer, travel: t, food: food, play: play };
+
+    // Merge: local edits take priority, but don't lose remote additions
+    // Merge travel
+    var mergedTravel = JSON.parse(JSON.stringify(t));
+    Object.keys(current.travel).forEach(function(prov) {
+      if (!mergedTravel[prov]) { mergedTravel[prov] = current.travel[prov]; return; }
+      Object.keys(current.travel[prov]).forEach(function(city) {
+        if (!mergedTravel[prov][city]) { mergedTravel[prov][city] = current.travel[prov][city]; }
+      });
+    });
+
+    // Merge food
+    var mergedFood = food.slice();
+    var foodTitles = mergedFood.map(function(f) { return f.title; });
+    (current.food || []).forEach(function(f) {
+      if (foodTitles.indexOf(f.title) === -1) { mergedFood.push(f); }
+    });
+
+    // Merge play
+    var mergedPlay = play.slice();
+    var playTitles = mergedPlay.map(function(p) { return p.title; });
+    (current.play || []).forEach(function(p) {
+      if (playTitles.indexOf(p.title) === -1) { mergedPlay.push(p); }
+    });
+
+    var newData = { version: newVer, travel: mergedTravel, food: mergedFood, play: mergedPlay };
     var jsonStr = JSON.stringify(newData, null, 2);
     var content = btoa(unescape(encodeURIComponent(jsonStr)));
 
@@ -1392,6 +1417,8 @@ function syncToCloud() {
 
 updateCounts();
 syncFromRemote();
+// Auto-check for updates every 60s
+setInterval(syncFromRemote, 60000);
 </script>
 </body>
 </html>
