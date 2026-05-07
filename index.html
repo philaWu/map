@@ -1531,7 +1531,7 @@ function pushDataJson(token, owner, repo, path, sha, ver, travel, food, play, re
       return new Promise(function(resolve) {
         setTimeout(resolve, 1000 + Math.random() * 2000);
       }).then(function() {
-        return fetch('https://api.github.com/repos/' + owner + '/' + repo + '/contents/' + path, {
+        return fetch('https://api.github.com/repos/' + owner + '/' + repo + '/contents/' + path + '?_=' + Date.now(), {
           headers: { Authorization: 'token ' + token }
         })
         .then(function(r) { return r.json(); })
@@ -1615,7 +1615,7 @@ function syncToCloud() {
   var path = 'data.json';
   var newVer;
 
-  fetch('https://api.github.com/repos/' + owner + '/' + repo + '/contents/' + path, {
+  fetch('https://api.github.com/repos/' + owner + '/' + repo + '/contents/' + path + '?_=' + Date.now(), {
     headers: { Authorization: 'token ' + token }
   })
   .then(function(r) { return r.json(); })
