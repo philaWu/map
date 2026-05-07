@@ -1357,7 +1357,25 @@ function syncFromRemote() {
   fetch('data.json')
     .then(function(r) { return r.json(); })
     .then(function(remote) {
-      if (remote.version <= localVersion) return;
+      if (remote.version <= localVersion) {
+        // Even if version matches, check if local has base64 photos to replace
+        var localRaw = localStorage.getItem('couple_travel_cities_v3');
+        var hasLocalBase64 = false;
+        if (localRaw) {
+          try {
+            var lt = JSON.parse(localRaw);
+            Object.keys(lt).forEach(function(prov) {
+              Object.keys(lt[prov] || {}).forEach(function(city) {
+                var info = lt[prov][city];
+                if (info && info.photos && info.photos.some(function(p) { return p.indexOf('data:') === 0; })) {
+                  hasLocalBase64 = true;
+                }
+              });
+            });
+          } catch(e) {}
+        }
+        if (!hasLocalBase64) return;
+      }
       var changed = false;
 
       // Merge travel — update existing cities too, not just new ones
