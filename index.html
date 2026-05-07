@@ -1548,9 +1548,9 @@ function pushDataJson(token, owner, repo, path, sha, ver, travel, food, play, re
               } else {
                 var rInfo = current.travel[prov][city];
                 var mInfo = mergedTravel[prov][city];
-                var rP = rInfo.photos ? rInfo.photos.length : 0;
-                var mP = mInfo.photos ? mInfo.photos.length : 0;
-                if (rP > mP) { mInfo.photos = rInfo.photos.slice(); }
+                var rClean = (rInfo.photos || []).filter(function(p) { return p.indexOf('data:') !== 0; });
+                var mPList = mInfo.photos || [];
+                if (rClean.length > mPList.length) { mInfo.photos = rClean.slice(); }
                 if (!mInfo.date && rInfo.date) { mInfo.date = rInfo.date; }
                 if (!mInfo.note && rInfo.note) { mInfo.note = rInfo.note; }
               }
@@ -1633,9 +1633,10 @@ function syncToCloud() {
           mergedTravel[prov][city] = rInfo;
         } else {
           var mInfo = mergedTravel[prov][city];
-          var rPhotos = rInfo.photos ? rInfo.photos.length : 0;
-          var mPhotos = mInfo.photos ? mInfo.photos.length : 0;
-          if (rPhotos > mPhotos) { mInfo.photos = rInfo.photos.slice(); }
+          // Only merge non-base64 photos from remote (base64 will be uploaded by processTravelPhotos)
+          var rClean = (rInfo.photos || []).filter(function(p) { return p.indexOf('data:') !== 0; });
+          var mPList = mInfo.photos || [];
+          if (rClean.length > mPList.length) { mInfo.photos = rClean.slice(); }
           if (!mInfo.date && rInfo.date) { mInfo.date = rInfo.date; }
           if (!mInfo.note && rInfo.note) { mInfo.note = rInfo.note; }
         }
