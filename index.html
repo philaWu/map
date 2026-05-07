@@ -295,6 +295,7 @@
   <div class="hearts">💕</div>
   <h1 class="title">我们的故事</h1>
   <p class="subtitle">每一次旅行 · 每一顿美食 · 每一次玩乐</p>
+  <button onclick="exportData()" style="margin-top:10px;padding:8px 20px;border-radius:20px;border:2px solid #e91e63;background:#fff;color:#e91e63;cursor:pointer;font-size:0.85rem;font-weight:600;transition:all 0.2s;" onmouseover="this.style.background='#e91e63';this.style.color='#fff'" onmouseout="this.style.background='#fff';this.style.color='#e91e63'">📥 导出数据</button>
 </div>
 
 <div class="tabs">
@@ -364,7 +365,7 @@
         <div class="card-location">📍 成都 · 小龙坎</div>
         <div class="card-note">第一次一起吃正宗的四川火锅，辣到流眼泪但还是停不下来！</div>
         <div class="card-rating">⭐⭐⭐⭐⭐</div>
-        <button class="delete-btn" onclick="this.parentElement.remove();updateCounts()">✕</button>
+        <button class="delete-btn" onclick="this.parentElement.remove();updateCounts();saveCards()">✕</button>
       </div>
       <div class="card">
         <div class="emoji">🍣</div>
@@ -373,7 +374,7 @@
         <div class="card-location">📍 上海 · 外滩</div>
         <div class="card-note">纪念日晚餐，每一道都像艺术品，你最爱那贯金枪鱼大腩</div>
         <div class="card-rating">⭐⭐⭐⭐⭐</div>
-        <button class="delete-btn" onclick="this.parentElement.remove();updateCounts()">✕</button>
+        <button class="delete-btn" onclick="this.parentElement.remove();updateCounts();saveCards()">✕</button>
       </div>
       <div class="card">
         <div class="emoji">🍜</div>
@@ -382,7 +383,7 @@
         <div class="card-location">📍 楼下小店</div>
         <div class="card-note">虽然是家小店，但你说是你吃过最好吃的牛肉面</div>
         <div class="card-rating">⭐⭐⭐⭐</div>
-        <button class="delete-btn" onclick="this.parentElement.remove();updateCounts()">✕</button>
+        <button class="delete-btn" onclick="this.parentElement.remove();updateCounts();saveCards()">✕</button>
       </div>
     </div>
   </div>
@@ -420,7 +421,7 @@
         <div class="card-date">2025-12-24</div>
         <div class="card-location">📍 万达影城</div>
         <div class="card-note">平安夜一起重温这部经典，你在我旁边偷偷哭了</div>
-        <button class="delete-btn" onclick="this.parentElement.remove();updateCounts()">✕</button>
+        <button class="delete-btn" onclick="this.parentElement.remove();updateCounts();saveCards()">✕</button>
       </div>
       <div class="card" style="border-left-color:#7c4dff;">
         <div class="emoji">🎡</div>
@@ -428,7 +429,7 @@
         <div class="card-date">2025-10-01</div>
         <div class="card-location">📍 上海迪士尼</div>
         <div class="card-note">排了两个小时的队坐极速光轮，你在摩天轮上说这是最开心的一天</div>
-        <button class="delete-btn" onclick="this.parentElement.remove();updateCounts()">✕</button>
+        <button class="delete-btn" onclick="this.parentElement.remove();updateCounts();saveCards()">✕</button>
       </div>
       <div class="card" style="border-left-color:#7c4dff;">
         <div class="emoji">🎮</div>
@@ -436,7 +437,7 @@
         <div class="card-date">2025-09-15</div>
         <div class="card-location">📍 在家</div>
         <div class="card-note">通关花了三个周末，每次卡关你都笑我手残，但最后还是你帮我过的</div>
-        <button class="delete-btn" onclick="this.parentElement.remove();updateCounts()">✕</button>
+        <button class="delete-btn" onclick="this.parentElement.remove();updateCounts();saveCards()">✕</button>
       </div>
     </div>
   </div>
@@ -1094,7 +1095,7 @@ function addCard(section) {
     '<div class="card-date">' + date + '</div>' +
     (note ? '<div class="card-note">' + escapeHtml(note) + '</div>' : '') +
     extraHtml +
-    '<button class="delete-btn" onclick="this.parentElement.remove();updateCounts()">✕</button>';
+    '<button class="delete-btn" onclick="this.parentElement.remove();updateCounts();saveCards()">✕</button>';
 
   document.getElementById(section + '-cards').appendChild(card);
   nameInput.value = '';
@@ -1103,6 +1104,7 @@ function addCard(section) {
   if (section === 'food') document.getElementById('food-rating').value = '';
   if (section === 'play') document.getElementById('play-type').value = '';
   updateCounts();
+  saveCards();
 }
 
 function escapeHtml(str) {
@@ -1127,6 +1129,85 @@ function updateCounts() {
   if (playEmpty) playEmpty.style.display = playCards === 0 ? 'block' : 'none';
 }
 
+function saveCards() {
+  var food = [];
+  document.querySelectorAll('#food-cards .card').forEach(function(card) {
+    food.push({
+      emoji: card.querySelector('.emoji') ? card.querySelector('.emoji').textContent : '',
+      title: card.querySelector('.card-title') ? card.querySelector('.card-title').textContent : '',
+      date: card.querySelector('.card-date') ? card.querySelector('.card-date').textContent : '',
+      location: card.querySelector('.card-location') ? card.querySelector('.card-location').textContent : '',
+      note: card.querySelector('.card-note') ? card.querySelector('.card-note').textContent : '',
+      rating: card.querySelector('.card-rating') ? card.querySelector('.card-rating').textContent : ''
+    });
+  });
+  localStorage.setItem('couple_food_cards', JSON.stringify(food));
+
+  var play = [];
+  document.querySelectorAll('#play-cards .card').forEach(function(card) {
+    play.push({
+      emoji: card.querySelector('.emoji') ? card.querySelector('.emoji').textContent : '',
+      title: card.querySelector('.card-title') ? card.querySelector('.card-title').textContent : '',
+      date: card.querySelector('.card-date') ? card.querySelector('.card-date').textContent : '',
+      location: card.querySelector('.card-location') ? card.querySelector('.card-location').textContent : '',
+      note: card.querySelector('.card-note') ? card.querySelector('.card-note').textContent : '',
+      rating: card.querySelector('.card-rating') ? card.querySelector('.card-rating').textContent : ''
+    });
+  });
+  localStorage.setItem('couple_play_cards', JSON.stringify(play));
+}
+
+function loadCards() {
+  var foodRaw = localStorage.getItem('couple_food_cards');
+  if (foodRaw) {
+    try {
+      var foodData = JSON.parse(foodRaw);
+      var container = document.getElementById('food-cards');
+      container.innerHTML = '';
+      foodData.forEach(function(c) {
+        var card = document.createElement('div');
+        card.className = 'card';
+        card.innerHTML =
+          (c.emoji ? '<div class="emoji">' + c.emoji + '</div>' : '') +
+          '<div class="card-title">' + escapeHtml(c.title) + '</div>' +
+          (c.date ? '<div class="card-date">' + c.date + '</div>' : '') +
+          (c.location ? '<div class="card-location">' + c.location + '</div>' : '') +
+          (c.note ? '<div class="card-note">' + escapeHtml(c.note) + '</div>' : '') +
+          (c.rating ? '<div class="card-rating">' + c.rating + '</div>' : '') +
+          '<button class="delete-btn" onclick="this.parentElement.remove();updateCounts();saveCards()">✕</button>';
+        container.appendChild(card);
+      });
+      return;
+    } catch(e) {}
+  }
+  // No localStorage data: save current hardcoded cards as default
+  saveCards();
+}
+
+var playRaw = localStorage.getItem('couple_play_cards');
+if (playRaw) {
+  try {
+    var playData = JSON.parse(playRaw);
+    var pContainer = document.getElementById('play-cards');
+    pContainer.innerHTML = '';
+    playData.forEach(function(c) {
+      var card = document.createElement('div');
+      card.className = 'card';
+      card.style.borderLeftColor = '#7c4dff';
+      card.innerHTML =
+        (c.emoji ? '<div class="emoji">' + c.emoji + '</div>' : '') +
+        '<div class="card-title">' + escapeHtml(c.title) + '</div>' +
+        (c.date ? '<div class="card-date">' + c.date + '</div>' : '') +
+        (c.location ? '<div class="card-location">' + c.location + '</div>' : '') +
+        (c.note ? '<div class="card-note">' + escapeHtml(c.note) + '</div>' : '') +
+        '<button class="delete-btn" onclick="this.parentElement.remove();updateCounts();saveCards()">✕</button>';
+      pContainer.appendChild(card);
+    });
+  } catch(e) {}
+}
+
+loadCards();
+
 document.getElementById('add-food-btn').addEventListener('click', function() { addCard('food'); });
 document.getElementById('add-play-btn').addEventListener('click', function() { addCard('play'); });
 
@@ -1137,6 +1218,41 @@ document.getElementById('add-play-btn').addEventListener('click', function() { a
     }
   });
 });
+
+function exportData() {
+  var foodCards = [];
+  document.querySelectorAll('#food-cards .card').forEach(function(card) {
+    foodCards.push({
+      emoji: card.querySelector('.emoji') ? card.querySelector('.emoji').textContent : '',
+      title: card.querySelector('.card-title') ? card.querySelector('.card-title').textContent : '',
+      date: card.querySelector('.card-date') ? card.querySelector('.card-date').textContent : '',
+      location: card.querySelector('.card-location') ? card.querySelector('.card-location').textContent : '',
+      note: card.querySelector('.card-note') ? card.querySelector('.card-note').textContent : '',
+      rating: card.querySelector('.card-rating') ? card.querySelector('.card-rating').textContent : ''
+    });
+  });
+  var playCards = [];
+  document.querySelectorAll('#play-cards .card').forEach(function(card) {
+    playCards.push({
+      emoji: card.querySelector('.emoji') ? card.querySelector('.emoji').textContent : '',
+      title: card.querySelector('.card-title') ? card.querySelector('.card-title').textContent : '',
+      date: card.querySelector('.card-date') ? card.querySelector('.card-date').textContent : '',
+      location: card.querySelector('.card-location') ? card.querySelector('.card-location').textContent : '',
+      note: card.querySelector('.card-note') ? card.querySelector('.card-note').textContent : '',
+      rating: card.querySelector('.card-rating') ? card.querySelector('.card-rating').textContent : ''
+    });
+  });
+  var data = {
+    travel: visitedCities,
+    food: foodCards,
+    play: playCards
+  };
+  var blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'data.json';
+  a.click();
+}
 
 updateCounts();
 </script>
