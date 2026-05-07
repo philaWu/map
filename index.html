@@ -1,0 +1,1144 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>我们的故事</title>
+<!-- ECharts CDN -->
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: "Microsoft YaHei", "PingFang SC", sans-serif;
+    background: linear-gradient(135deg, #fce4ec 0%, #f8bbd0 30%, #e1bee7 60%, #fce4ec 100%);
+    min-height: 100vh;
+    background-attachment: fixed;
+    color: #4a154b;
+  }
+
+  /* ===== Header ===== */
+  .header {
+    text-align: center;
+    padding: 30px 20px 15px;
+  }
+  .header .title {
+    font-size: 2.2rem;
+    color: #c62828;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+  }
+  .header .subtitle {
+    font-size: 1rem;
+    color: #ad1457;
+    margin-top: 6px;
+    letter-spacing: 2px;
+  }
+  .header .hearts {
+    font-size: 1.5rem;
+    margin-top: 5px;
+    animation: float 2s ease-in-out infinite;
+  }
+  @keyframes float {
+    0%,100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+  }
+
+  /* ===== Tabs ===== */
+  .tabs {
+    display: flex;
+    justify-content: center;
+    gap: 0;
+    max-width: 700px;
+    margin: 15px auto;
+    background: rgba(255,255,255,0.7);
+    border-radius: 50px;
+    overflow: hidden;
+    box-shadow: 0 2px 15px rgba(0,0,0,0.08);
+  }
+  .tab {
+    flex: 1;
+    padding: 14px 0;
+    text-align: center;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #666;
+    transition: all 0.3s;
+    border: none;
+    background: transparent;
+    letter-spacing: 1px;
+    position: relative;
+  }
+  .tab:hover { color: #c62828; background: rgba(255,255,255,0.4); }
+  .tab.active {
+    color: #fff;
+    background: linear-gradient(135deg, #e91e63, #c62828);
+    border-radius: 50px;
+  }
+
+  /* ===== Content Area ===== */
+  .content-wrapper {
+    max-width: 950px;
+    margin: 0 auto 40px;
+    padding: 0 15px;
+  }
+  .section { display: none; animation: fadeIn 0.4s ease; }
+  .section.active { display: block; }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(15px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ===== Section 1 - Travel Map ===== */
+  .map-container {
+    background: rgba(255,255,255,0.8);
+    border-radius: 20px;
+    padding: 20px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+  }
+  #china-echarts {
+    width: 100%;
+    height: 520px;
+    border-radius: 12px;
+    cursor: pointer;
+  }
+  .map-legend {
+    display: flex;
+    gap: 18px;
+    justify-content: center;
+    margin: 10px 0;
+    font-size: 0.85rem;
+    color: #888;
+    flex-wrap: wrap;
+  }
+  .map-legend span { display: flex; align-items: center; gap: 5px; }
+  .legend-dot { width: 16px; height: 16px; border-radius: 3px; display: inline-block; }
+  .visited-list {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 14px;
+    margin-top: 15px;
+  }
+  .city-card {
+    background: rgba(255,255,255,0.85);
+    border-radius: 16px;
+    padding: 16px;
+    box-shadow: 0 3px 12px rgba(0,0,0,0.06);
+    position: relative;
+    border-left: 4px solid #e91e63;
+    transition: transform 0.2s;
+  }
+  .city-card:hover { transform: translateY(-2px); }
+  .city-card .city-header {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    margin-bottom: 8px;
+    margin-right: 70px;
+  }
+  .city-card .city-name {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #880e4f;
+  }
+  .city-card .city-date {
+    font-size: 0.78rem;
+    color: #999;
+    white-space: nowrap;
+  }
+  .city-card .city-note {
+    font-size: 0.85rem;
+    color: #666;
+    line-height: 1.5;
+    margin-bottom: 6px;
+  }
+  .city-card .city-photo {
+    width: 100%;
+    max-height: 180px;
+    object-fit: cover;
+    border-radius: 10px;
+    margin-top: 8px;
+    cursor: pointer;
+    border: 1px solid #eee;
+    background: #fafafa;
+  }
+  .city-card .city-delete {
+    background: none;
+    border: none;
+    color: #999;
+    cursor: pointer;
+    font-size: 1.1rem;
+    padding: 4px 6px;
+    transition: color 0.2s;
+  }
+  .city-card .city-delete:hover { color: #e53935; }
+  .city-card .city-edit-btn {
+    background: none;
+    border: none;
+    color: #e91e63;
+    cursor: pointer;
+    font-size: 1rem;
+    padding: 4px 6px;
+    transition: color 0.2s;
+  }
+  .city-card .city-edit-btn:hover { color: #c62828; }
+  .btn {
+    padding: 10px 24px;
+    border-radius: 25px;
+    border: none;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 600;
+    letter-spacing: 1px;
+    transition: all 0.2s;
+    color: #fff;
+    background: linear-gradient(135deg, #e91e63, #c62828);
+    box-shadow: 0 2px 10px rgba(233,30,99,0.3);
+  }
+  .btn:hover { transform: translateY(-2px); box-shadow: 0 4px 15px rgba(233,30,99,0.4); }
+
+  /* ===== Section 2 & 3 - Cards ===== */
+  .section-header {
+    text-align: center;
+    margin-bottom: 15px;
+  }
+  .section-header h2 {
+    font-size: 1.5rem;
+    color: #ad1457;
+    margin-bottom: 4px;
+  }
+  .section-stats {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+  .section-stat {
+    background: rgba(255,255,255,0.7);
+    border-radius: 12px;
+    padding: 10px 18px;
+    text-align: center;
+    font-size: 0.85rem;
+    color: #ad1457;
+  }
+  .section-stat b { font-size: 1.2rem; color: #c62828; }
+  .cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 16px;
+  }
+  .card {
+    background: rgba(255,255,255,0.8);
+    border-radius: 16px;
+    padding: 18px;
+    box-shadow: 0 3px 15px rgba(0,0,0,0.06);
+    transition: all 0.3s;
+    position: relative;
+    overflow: hidden;
+    border-left: 4px solid #e91e63;
+  }
+  .card:hover { transform: translateY(-3px); box-shadow: 0 8px 25px rgba(0,0,0,0.1); }
+  .card .emoji { font-size: 2rem; margin-bottom: 5px; }
+  .card .card-title { font-size: 1.1rem; font-weight: 700; color: #880e4f; margin-bottom: 4px; }
+  .card .card-date { font-size: 0.78rem; color: #999; margin-bottom: 6px; }
+  .card .card-note { font-size: 0.85rem; color: #666; line-height: 1.5; }
+  .card .card-rating { margin-top: 8px; color: #f9a825; font-size: 0.9rem; letter-spacing: 2px; }
+  .card .card-location { font-size: 0.78rem; color: #ad1457; margin-top: 4px; font-weight: 500; }
+  .card .delete-btn {
+    position: absolute; top: 10px; right: 12px;
+    background: none; border: none; color: #ccc;
+    cursor: pointer; font-size: 1.1rem; transition: color 0.2s;
+  }
+  .card .delete-btn:hover { color: #e53935; }
+  .add-card-form {
+    background: rgba(255,255,255,0.7);
+    border-radius: 16px;
+    padding: 18px;
+    margin-bottom: 20px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.04);
+  }
+  .add-card-form input, .add-card-form select {
+    padding: 10px 14px;
+    border-radius: 25px;
+    border: 2px solid #f8bbd0;
+    font-size: 0.85rem;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .add-card-form input:focus, .add-card-form select:focus { border-color: #e91e63; }
+
+  /* ===== Footer ===== */
+  .footer {
+    text-align: center; padding: 20px; color: #ad1457;
+    font-size: 0.85rem; opacity: 0.7;
+  }
+
+  @media (max-width: 600px) {
+    .header .title { font-size: 1.6rem; }
+    .tabs { border-radius: 30px; }
+    .tab { font-size: 0.85rem; padding: 12px 0; }
+    .cards { grid-template-columns: 1fr; }
+    .add-card-form { flex-direction: column; align-items: stretch; }
+    .add-card-form input, .add-card-form select { width: 100%; }
+    #china-echarts { height: 360px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="hearts">💕</div>
+  <h1 class="title">我们的故事</h1>
+  <p class="subtitle">每一次旅行 · 每一顿美食 · 每一次玩乐</p>
+</div>
+
+<div class="tabs">
+  <button class="tab active" data-section="travel">✈️ 旅行地图</button>
+  <button class="tab" data-section="food">🍽️ 美食品鉴</button>
+  <button class="tab" data-section="play">🎮 玩乐</button>
+</div>
+
+<div class="content-wrapper">
+
+  <!-- ========== 第一板块：旅行地图 ========== -->
+  <div id="section-travel" class="section active">
+    <div class="map-container">
+      <div class="section-header">
+        </div>
+      <div class="section-stats">
+        <div class="section-stat">已走过 <b id="travel-count">0</b> 个城市</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:5px;">
+        <button class="btn" id="back-to-country" style="display:none;padding:6px 16px;font-size:0.8rem;">← 返回全国</button>
+        <span id="map-breadcrumb" style="font-size:0.9rem;color:#ad1457;font-weight:600;"></span>
+      </div>
+      <div id="china-echarts"></div>
+      <div class="map-legend">
+        <span><span class="legend-dot" style="background:#f5f5f5;border:1px solid #ddd;"></span> 未去过</span>
+        <span><span class="legend-dot" style="background:#e91e63;"></span> 已去过 💗</span>
+      </div>
+      <div class="add-city-form" style="margin-top:15px;background:rgba(255,255,255,0.6);border-radius:16px;padding:18px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:center;box-shadow:0 2px 10px rgba(0,0,0,0.04);">
+        <select id="add-city-province" style="padding:10px 14px;border-radius:25px;border:2px solid #f8bbd0;font-size:0.85rem;outline:none;min-width:160px;">
+          <option value="">选择省份</option>
+        </select>
+        <select id="add-city-name" style="padding:10px 14px;border-radius:25px;border:2px solid #f8bbd0;font-size:0.85rem;outline:none;min-width:160px;" disabled>
+          <option value="">选择城市</option>
+        </select>
+        <button class="btn" id="add-city-btn">+ 添加去过</button>
+      </div>
+      <div class="visited-list" id="travel-cards"></div>
+    </div>
+  </div>
+
+  <!-- ========== 第二板块：美食品鉴 ========== -->
+  <div id="section-food" class="section">
+    <div class="section-header">
+    </div>
+    <div class="section-stats">
+      <div class="section-stat">共记录 <b id="food-count">0</b> 顿美食</div>
+    </div>
+    <div class="add-card-form">
+      <input id="food-name" placeholder="美食名称..." style="width:140px;">
+      <input id="food-note" placeholder="在哪吃的 / 口味..." style="width:190px;">
+      <input id="food-date" type="date" style="width:140px;">
+      <select id="food-rating" style="width:130px;">
+        <option value="">评分</option>
+        <option value="5">⭐⭐⭐⭐⭐</option>
+        <option value="4">⭐⭐⭐⭐</option>
+        <option value="3">⭐⭐⭐</option>
+        <option value="2">⭐⭐</option>
+        <option value="1">⭐</option>
+      </select>
+      <button class="btn" id="add-food-btn">+ 添加</button>
+    </div>
+    <div class="cards" id="food-cards">
+      <div class="card">
+        <div class="emoji">🍲</div>
+        <div class="card-title">火锅</div>
+        <div class="card-date">2025-12-20</div>
+        <div class="card-location">📍 成都 · 小龙坎</div>
+        <div class="card-note">第一次一起吃正宗的四川火锅，辣到流眼泪但还是停不下来！</div>
+        <div class="card-rating">⭐⭐⭐⭐⭐</div>
+        <button class="delete-btn" onclick="this.parentElement.remove();updateCounts()">✕</button>
+      </div>
+      <div class="card">
+        <div class="emoji">🍣</div>
+        <div class="card-title">日料Omakase</div>
+        <div class="card-date">2025-11-15</div>
+        <div class="card-location">📍 上海 · 外滩</div>
+        <div class="card-note">纪念日晚餐，每一道都像艺术品，你最爱那贯金枪鱼大腩</div>
+        <div class="card-rating">⭐⭐⭐⭐⭐</div>
+        <button class="delete-btn" onclick="this.parentElement.remove();updateCounts()">✕</button>
+      </div>
+      <div class="card">
+        <div class="emoji">🍜</div>
+        <div class="card-title">兰州拉面</div>
+        <div class="card-date">2025-10-08</div>
+        <div class="card-location">📍 楼下小店</div>
+        <div class="card-note">虽然是家小店，但你说是你吃过最好吃的牛肉面</div>
+        <div class="card-rating">⭐⭐⭐⭐</div>
+        <button class="delete-btn" onclick="this.parentElement.remove();updateCounts()">✕</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== 第三板块：玩乐 ========== -->
+  <div id="section-play" class="section">
+    <div class="section-header">
+    </div>
+    <div class="section-stats">
+      <div class="section-stat">共记录 <b id="play-count">0</b> 次玩乐</div>
+    </div>
+    <div class="add-card-form">
+      <input id="play-name" placeholder="活动名称..." style="width:140px;">
+      <input id="play-note" placeholder="在哪里 / 感受..." style="width:190px;">
+      <input id="play-date" type="date" style="width:140px;">
+      <select id="play-type" style="width:140px;">
+        <option value="">类型</option>
+        <option value="🎬 看电影">🎬 看电影</option>
+        <option value="🎤 KTV">🎤 KTV</option>
+        <option value="🎮 打游戏">🎮 打游戏</option>
+        <option value="🏀 运动">🏀 运动</option>
+        <option value="🎡 游乐园">🎡 游乐园</option>
+        <option value="🃏 桌游">🃏 桌游</option>
+        <option value="🎨 手工/DIY">🎨 手工/DIY</option>
+        <option value="🏕️ 户外">🏕️ 户外</option>
+        <option value="🛍️ 逛街">🛍️ 逛街</option>
+        <option value="🎵 音乐/演出">🎵 音乐/演出</option>
+      </select>
+      <button class="btn" id="add-play-btn">+ 添加</button>
+    </div>
+    <div class="cards" id="play-cards">
+      <div class="card" style="border-left-color:#7c4dff;">
+        <div class="emoji">🎬</div>
+        <div class="card-title">《你的名字》</div>
+        <div class="card-date">2025-12-24</div>
+        <div class="card-location">📍 万达影城</div>
+        <div class="card-note">平安夜一起重温这部经典，你在我旁边偷偷哭了</div>
+        <button class="delete-btn" onclick="this.parentElement.remove();updateCounts()">✕</button>
+      </div>
+      <div class="card" style="border-left-color:#7c4dff;">
+        <div class="emoji">🎡</div>
+        <div class="card-title">迪士尼乐园</div>
+        <div class="card-date">2025-10-01</div>
+        <div class="card-location">📍 上海迪士尼</div>
+        <div class="card-note">排了两个小时的队坐极速光轮，你在摩天轮上说这是最开心的一天</div>
+        <button class="delete-btn" onclick="this.parentElement.remove();updateCounts()">✕</button>
+      </div>
+      <div class="card" style="border-left-color:#7c4dff;">
+        <div class="emoji">🎮</div>
+        <div class="card-title">双人成行</div>
+        <div class="card-date">2025-09-15</div>
+        <div class="card-location">📍 在家</div>
+        <div class="card-note">通关花了三个周末，每次卡关你都笑我手残，但最后还是你帮我过的</div>
+        <button class="delete-btn" onclick="this.parentElement.remove();updateCounts()">✕</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="footer">Made with 💗 · 我们的故事 · 2025</div>
+
+<script>
+// ===== Tab 切换 =====
+document.querySelectorAll('.tab').forEach(function(tab) {
+  tab.addEventListener('click', function() {
+    document.querySelectorAll('.tab').forEach(function(t) { t.classList.remove('active'); });
+    document.querySelectorAll('.section').forEach(function(s) { s.classList.remove('active'); });
+    this.classList.add('active');
+    document.getElementById('section-' + this.dataset.section).classList.add('active');
+    // 切换到旅行地图时，resize ECharts 以防尺寸计算偏差
+    if (this.dataset.section === 'travel' && window._chinaChart) {
+      setTimeout(function() { window._chinaChart.resize(); }, 300);
+    }
+  });
+});
+
+// ===== ECharts 中国地图（省市下钻） =====
+(function() {
+  var visitedCities = {};   // { provinceName: { cityName: { date, note, photo } } }
+  var currentLevel = 'country'; // 'country' | 'city'
+  var currentProvince = null;
+  var nationalGeoJson = null;
+  var cityGeoCache = {};    // { provinceName: geoJson }
+
+  // 省级 adcode 映射
+  var adcodeMap = {
+    '北京市':'110000','天津市':'120000','河北省':'130000','山西省':'140000',
+    '内蒙古自治区':'150000','辽宁省':'210000','吉林省':'220000','黑龙江省':'230000',
+    '上海市':'310000','江苏省':'320000','浙江省':'330000','安徽省':'340000',
+    '福建省':'350000','江西省':'360000','山东省':'370000','河南省':'410000',
+    '湖北省':'420000','湖南省':'430000','广东省':'440000','广西壮族自治区':'450000',
+    '海南省':'460000','重庆市':'500000','四川省':'510000','贵州省':'520000',
+    '云南省':'530000','西藏自治区':'540000','陕西省':'610000','甘肃省':'620000',
+    '青海省':'630000','宁夏回族自治区':'640000','新疆维吾尔自治区':'650000',
+    '台湾省':'710000','香港特别行政区':'810000','澳门特别行政区':'820000'
+  };
+
+  // 从 localStorage 加载，没有则用预设
+  function loadVisited() {
+    var raw = localStorage.getItem('couple_travel_cities_v3');
+    if (raw) {
+      try {
+        visitedCities = JSON.parse(raw);
+        // 迁移旧 photo 字段到 photos 数组
+        Object.keys(visitedCities).forEach(function(prov) {
+          Object.keys(visitedCities[prov]).forEach(function(city) {
+            var info = visitedCities[prov][city];
+            if (typeof info.photo === 'string') {
+              info.photos = info.photo ? [info.photo] : [];
+              delete info.photo;
+            }
+            if (!info.photos) info.photos = [];
+          });
+        });
+        return;
+      } catch(e) {}
+    }
+    // 预设默认值
+    visitedCities = {
+      '四川省': { '成都市': { date: '2024-10-01', note: '国庆一起去的，火锅太好吃啦', photos: [] } },
+      '上海市': { '上海市': { date: '2024-08-15', note: '在外滩看了夜景', photos: [] } },
+      '浙江省': { '杭州市': { date: '2024-05-20', note: '西湖边散步，520特别的日子', photos: [] } }
+    };
+    saveVisited();
+  }
+
+  function saveVisited() {
+    localStorage.setItem('couple_travel_cities_v3', JSON.stringify(visitedCities));
+  }
+
+  loadVisited();
+
+  var chartDom = document.getElementById('china-echarts');
+  var chart = echarts.init(chartDom);
+  window._chinaChart = chart;
+
+  var backBtn = document.getElementById('back-to-country');
+  var breadcrumb = document.getElementById('map-breadcrumb');
+
+  backBtn.addEventListener('click', function() { showCountry(); });
+
+  // 加载全国 GeoJSON
+  fetch('https://geo.datav.aliyun.com/areas_v3/bound/100000_full.json')
+    .then(function(r) { return r.json(); })
+    .then(function(geo) {
+      nationalGeoJson = geo;
+      echarts.registerMap('china', geo);
+      showCountry();
+    })
+    .catch(function() {
+      chartDom.innerHTML = '<p style="text-align:center;padding:100px;color:#999;">地图加载失败，请检查网络连接后刷新页面</p>';
+    });
+
+  function provinceVisitedCount(name) {
+    return visitedCities[name] ? Object.keys(visitedCities[name]).length : 0;
+  }
+
+  function totalVisitedCities() {
+    var count = 0;
+    Object.keys(visitedCities).forEach(function(p) {
+      count += Object.keys(visitedCities[p]).length;
+    });
+    return count;
+  }
+
+  // 填充省份下拉框
+  function populateProvinceDropdown() {
+    var sel = document.getElementById('add-city-province');
+    var currentVal = sel.value;
+    sel.innerHTML = '<option value="">选择省份</option>';
+    var provinces = Object.keys(adcodeMap).sort();
+    provinces.forEach(function(name) {
+      var opt = document.createElement('option');
+      opt.value = name;
+      opt.textContent = name;
+      if (name === currentVal) opt.selected = true;
+      sel.appendChild(opt);
+    });
+  }
+  populateProvinceDropdown();
+
+  // 省份切换时加载城市列表
+  var allCitiesCache = {}; // { province: [cityName, ...] }
+  document.getElementById('add-city-province').addEventListener('change', function() {
+    var prov = this.value;
+    var citySel = document.getElementById('add-city-name');
+    citySel.innerHTML = '<option value="">选择城市</option>';
+    citySel.disabled = !prov;
+
+    if (!prov) return;
+
+    // 检查缓存
+    if (allCitiesCache[prov]) {
+      allCitiesCache[prov].forEach(function(c) {
+        var opt = document.createElement('option');
+        opt.value = c; opt.textContent = c;
+        citySel.appendChild(opt);
+      });
+      return;
+    }
+
+    // 从已有 GeoJSON 或 fetch 获取城市列表
+    function fillCities(features) {
+      var cities = [];
+      features.forEach(function(f) {
+        var n = f.properties.name;
+        if (n) { cities.push(n); }
+      });
+      cities.sort();
+      allCitiesCache[prov] = cities;
+      citySel.innerHTML = '<option value="">选择城市</option>';
+      cities.forEach(function(c) {
+        var opt = document.createElement('option');
+        opt.value = c; opt.textContent = c;
+        citySel.appendChild(opt);
+      });
+    }
+
+    if (cityGeoCache[prov]) {
+      fillCities(cityGeoCache[prov].features);
+    } else {
+      var adcode = adcodeMap[prov];
+      if (adcode) {
+        fetch('https://geo.datav.aliyun.com/areas_v3/bound/' + adcode + '_full.json')
+          .then(function(r) { return r.json(); })
+          .then(function(geo) {
+            cityGeoCache[prov] = geo;
+            fillCities(geo.features);
+          })
+          .catch(function() {
+            citySel.innerHTML = '<option value="">加载失败</option>';
+          });
+      }
+    }
+  });
+
+  // 添加城市按钮
+  document.getElementById('add-city-btn').addEventListener('click', function() {
+    var prov = document.getElementById('add-city-province').value;
+    var city = document.getElementById('add-city-name').value;
+    if (!prov || !city) return;
+    if (!visitedCities[prov]) visitedCities[prov] = {};
+    if (visitedCities[prov][city]) {
+      alert('该城市已添加过，可以在下方卡片中编辑');
+      return;
+    }
+    visitedCities[prov][city] = { date: '', note: '', photos: [] };
+    saveVisited();
+    document.getElementById('add-city-name').value = '';
+
+    if (currentLevel === 'country') showCountry();
+    else if (currentLevel === 'city' && currentProvince === prov) {
+      var geo = cityGeoCache[prov];
+      if (geo) renderCityMap(prov, geo);
+    }
+    renderCards();
+    updateCounts();
+  });
+
+  // === 全国视图 ===
+  function showCountry() {
+    currentLevel = 'country';
+    currentProvince = null;
+    backBtn.style.display = 'none';
+    breadcrumb.textContent = '';
+
+    var data = [];
+    Object.keys(visitedCities).forEach(function(name) {
+      var cnt = Object.keys(visitedCities[name]).length;
+      data.push({ name: name, value: cnt });
+    });
+
+    chart.clear();
+    chart.setOption({
+      tooltip: {
+        trigger: 'item',
+        formatter: function(p) {
+          var cnt = provinceVisitedCount(p.name);
+          if (cnt > 0) return '<b>' + p.name + '</b><br/>💗 已去过 ' + cnt + ' 个城市<br/><small>点击查看城市</small>';
+          return '<b>' + p.name + '</b><br/>🤍 还没去过<br/><small>点击查看城市</small>';
+        },
+        backgroundColor: 'rgba(255,255,255,0.95)',
+        borderColor: '#f48fb1',
+        textStyle: { color: '#880e4f' }
+      },
+      visualMap: {
+        show: false, min: 0, max: 5,
+        inRange: { color: ['#f5f5f5', '#e91e63'] }
+      },
+      series: [{
+        type: 'map', map: 'china', roam: true,
+        zoom: 1.15, center: [104.5, 36],
+        label: { show: false },
+        emphasis: {
+          label: { show: true, color: '#c62828', fontSize: 13 },
+          itemStyle: { areaColor: '#f48fb1', borderColor: '#c62828', borderWidth: 1.5 }
+        },
+        itemStyle: { borderColor: '#ddd', borderWidth: 1 },
+        selectedMode: false,
+        data: data
+      }]
+    }, true);
+
+    chart.off('click');
+    chart.on('click', function(params) {
+      if (params.componentSubType !== 'map') return;
+      drillToCity(params.name);
+    });
+
+    renderCards();
+    updateCounts();
+  }
+
+  // === 城市视图 ===
+  function drillToCity(provinceName) {
+    var adcode = adcodeMap[provinceName];
+    // 直辖市/特别行政区/台湾 无下钻，直接标记
+    var noDrill = ['北京市','天津市','上海市','重庆市','香港特别行政区','澳门特别行政区','台湾省'];
+    if (!adcode || noDrill.indexOf(provinceName) >= 0) {
+      toggleProvinceVisited(provinceName);
+      showCountry();
+      return;
+    }
+
+    currentLevel = 'city';
+    currentProvince = provinceName;
+    backBtn.style.display = 'inline-block';
+    breadcrumb.textContent = provinceName;
+
+    // 使用缓存
+    if (cityGeoCache[provinceName]) {
+      renderCityMap(provinceName, cityGeoCache[provinceName]);
+      return;
+    }
+
+    // 加载市级 GeoJSON
+    var url = 'https://geo.datav.aliyun.com/areas_v3/bound/' + adcode + '_full.json';
+    fetch(url)
+      .then(function(r) {
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        return r.json();
+      })
+      .then(function(geo) {
+        if (!geo || !geo.features || geo.features.length === 0) {
+          throw new Error('Empty geo data');
+        }
+        cityGeoCache[provinceName] = geo;
+        var mapName = 'city_' + adcode;
+        echarts.registerMap(mapName, geo);
+        renderCityMap(provinceName, geo);
+      })
+      .catch(function(err) {
+        console.warn('下钻' + provinceName + '失败:', err.message);
+        // 加载失败，回退到直接标记省份
+        toggleProvinceVisited(provinceName);
+        showCountry();
+      });
+  }
+
+  function renderCityMap(provinceName, geo) {
+    var adcode = adcodeMap[provinceName];
+    var mapName = 'city_' + adcode;
+    var cityMap = visitedCities[provinceName] || {};
+
+    var data = [];
+    Object.keys(cityMap).forEach(function(c) { data.push({ name: c, value: 1 }); });
+
+    chart.clear();
+    chart.setOption({
+      tooltip: {
+        trigger: 'item',
+        formatter: function(p) {
+          var info = cityMap[p.name];
+          if (info !== undefined) {
+            var s = '<b>' + p.name + '</b><br/>💗 已去过';
+            if (info.date) s += '<br/>📅 ' + info.date;
+            if (info.note) s += '<br/>📝 ' + info.note;
+            return s;
+          }
+          return '<b>' + p.name + '</b><br/>🤍 还没去过';
+        },
+        backgroundColor: 'rgba(255,255,255,0.95)',
+        borderColor: '#f48fb1',
+        textStyle: { color: '#880e4f' }
+      },
+      visualMap: { show: false, min: 0, max: 1, inRange: { color: ['#f5f5f5', '#e91e63'] } },
+      series: [{
+        type: 'map', map: mapName, roam: true,
+        label: { show: true, fontSize: 10, color: '#666' },
+        emphasis: {
+          label: { show: true, color: '#c62828' },
+          itemStyle: { areaColor: '#f48fb1', borderColor: '#c62828', borderWidth: 1.5 }
+        },
+        itemStyle: { borderColor: '#ddd', borderWidth: 1 },
+        selectedMode: false,
+        data: data
+      }]
+    }, true);
+
+    chart.off('click');
+    chart.on('click', function(params) {
+      if (params.componentSubType !== 'map') return;
+      // 点击城市只显示信息，不切换状态
+    });
+  }
+
+  // === 切换状态 ===
+  function toggleProvinceVisited(name) {
+    if (visitedCities[name]) {
+      delete visitedCities[name];
+    } else {
+      visitedCities[name] = {};
+      visitedCities[name][name] = { date: '', note: '', photos: [] };
+    }
+    saveVisited();
+  }
+
+  function toggleCityVisited(provinceName, cityName) {
+    if (!visitedCities[provinceName]) visitedCities[provinceName] = {};
+    var cities = visitedCities[provinceName];
+    if (cities[cityName] !== undefined) {
+      delete cities[cityName];
+      if (Object.keys(cities).length === 0) delete visitedCities[provinceName];
+    } else {
+      cities[cityName] = { date: '', note: '', photos: [] };
+    }
+    saveVisited();
+    // 更新城市视图的颜色
+    if (currentLevel === 'city' && currentProvince === provinceName) {
+      var geo = cityGeoCache[provinceName];
+      if (geo) renderCityMap(provinceName, geo);
+    }
+    renderCards();
+    updateCounts();
+  }
+
+  // === 城市卡片展示 ===
+  function renderCards() {
+    var container = document.getElementById('travel-cards');
+    container.innerHTML = '';
+    var all = [];
+    Object.keys(visitedCities).forEach(function(prov) {
+      Object.keys(visitedCities[prov]).forEach(function(city) {
+        var info = visitedCities[prov][city];
+        all.push({ prov: prov, city: city, date: info.date, note: info.note, photos: info.photos || [] });
+      });
+    });
+
+    if (all.length === 0) {
+      container.innerHTML = '<p style="text-align:center;color:#999;padding:20px;font-size:0.85rem;">还没有记录，在上面选择省份和城市开始记录吧 💕</p>';
+      return;
+    }
+
+    all.sort(function(a, b) { return (b.date || '').localeCompare(a.date || ''); });
+
+    all.forEach(function(item) {
+      var card = document.createElement('div');
+      card.className = 'city-card';
+      card.style.cursor = 'pointer';
+
+      var label = item.prov === item.city ? item.city : item.prov + ' · ' + item.city;
+
+      // 点击卡片切换详情
+      (function(item, label) {
+        card._detailOpen = false;
+        card.addEventListener('click', function(e) {
+          if (e.target.tagName === 'BUTTON' || e.target.tagName === 'INPUT' || e.target.tagName === 'LABEL') return;
+          card._detailOpen = !card._detailOpen;
+          renderCardContent(card, item, label, card._detailOpen ? 'detail' : 'normal');
+        });
+      })(item, label);
+
+      card.style.cursor = 'pointer';
+      renderCardContent(card, item, label, 'normal');
+      container.appendChild(card);
+    });
+  }
+
+  function renderCardContent(card, item, label, mode) {
+    // mode: 'normal' | 'detail' | 'edit'
+    var isDetail = mode === 'detail';
+    var isEdit = mode === 'edit';
+
+    var html = '<div style="position:absolute;top:10px;right:12px;display:flex;gap:12px;z-index:2;">';
+    html += '<button class="city-edit-btn" title="编辑">✏️</button>';
+    html += '<button class="city-delete" title="删除">✕</button>';
+    html += '</div>';
+
+    html += '<div class="city-header">';
+    html += '<span class="city-name">📍 ' + escapeHtml(label) + '</span>';
+    html += '<span class="city-date">' + (item.date || '') + '</span>';
+    html += '</div>';
+
+    if (isEdit) {
+      var photos = item._photosNew || item.photos || [];
+      html += '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;" onclick="event.stopPropagation()">';
+      html += '<input type="date" class="edit-date" value="' + (item.date || '') + '" style="padding:8px 12px;border-radius:20px;border:2px solid #f48fb1;font-size:0.85rem;outline:none;width:145px;">';
+      html += '<input type="text" class="edit-note" value="' + escapeHtml(item.note || '') + '" placeholder="备注..." style="padding:8px 12px;border-radius:20px;border:2px solid #f48fb1;font-size:0.85rem;outline:none;flex:1;min-width:160px;">';
+      html += '<div style="flex-basis:100%;">';
+      html += '<label style="display:inline-block;padding:8px 14px;border-radius:20px;border:2px solid #f48fb1;font-size:0.85rem;cursor:pointer;color:#ad1457;background:#fff;">📷 添加照片<input type="file" class="edit-photo-file" accept="image/*" style="display:none;"></label>';
+      html += '<span class="edit-photo-count" style="font-size:0.75rem;color:#999;margin-left:8px;">' + photos.length + ' 张照片</span>';
+      html += '<div class="edit-photos-grid" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;">';
+      photos.forEach(function(src, idx) {
+        html += '<div style="position:relative;display:inline-block;">';
+        html += '<img src="' + escapeHtml(src) + '" style="height:70px;border-radius:8px;border:1px solid #eee;">';
+        html += '<span class="edit-photo-remove" data-idx="' + idx + '" style="position:absolute;top:-6px;right:-6px;width:20px;height:20px;border-radius:50%;background:#e53935;color:#fff;font-size:12px;line-height:20px;text-align:center;cursor:pointer;" title="删除此照片">✕</span>';
+        html += '</div>';
+      });
+      html += '</div></div>';
+      html += '<button class="btn edit-save-btn" style="padding:6px 14px;font-size:0.8rem;">💾 保存</button>';
+      html += '<button class="edit-cancel-btn" style="padding:6px 14px;border-radius:20px;border:1px solid #ccc;background:#fff;color:#666;cursor:pointer;font-size:0.8rem;">取消</button>';
+      html += '</div>';
+    } else {
+      if (item.note) {
+        html += '<div class="city-note">📝 ' + escapeHtml(item.note) + '</div>';
+      }
+      var photos = item.photos || [];
+      if (photos.length > 0) {
+        var imgH = isDetail ? 'max-height:300px;object-fit:contain;' : 'height:70px;object-fit:cover;';
+        html += '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;">';
+        photos.forEach(function(src) {
+          html += '<img src="' + escapeHtml(src) + '" loading="lazy" onerror="this.style.display=\'none\'" style="' + imgH + 'border-radius:8px;border:1px solid #eee;cursor:pointer;" onclick="event.stopPropagation();window.open(this.src)">';
+        });
+        html += '</div>';
+      }
+      if (!isDetail && (item.note || photos.length > 0)) {
+        html += '<div style="font-size:0.72rem;color:#bbb;margin-top:4px;">点击卡片查看详情</div>';
+      }
+    }
+
+    card.innerHTML = html;
+
+    // 删除
+    card.querySelector('.city-delete').addEventListener('click', function(e) {
+      e.stopPropagation();
+      deleteCity(item);
+    });
+
+    // 编辑按钮
+    card.querySelector('.city-edit-btn').addEventListener('click', function(e) {
+      e.stopPropagation();
+      enterEdit(card, item, label);
+    });
+  }
+
+  function deleteCity(item) {
+    var cities = visitedCities[item.prov];
+    if (cities) {
+      delete cities[item.city];
+      if (Object.keys(cities).length === 0) delete visitedCities[item.prov];
+    }
+    saveVisited();
+    if (currentLevel === 'country') showCountry();
+    else if (currentLevel === 'city' && currentProvince === item.prov) {
+      var geo = cityGeoCache[item.prov];
+      if (geo) renderCityMap(item.prov, geo);
+    }
+    renderCards();
+    updateCounts();
+  }
+
+  function enterEdit(card, item, label) {
+    item._photosNew = (item.photos || []).slice();
+    renderCardContent(card, item, label, 'edit');
+    bindEditEvents(card, item, label);
+  }
+
+  function bindEditEvents(card, item, label) {
+    var fileInput = card.querySelector('.edit-photo-file');
+    if (fileInput) {
+      fileInput.addEventListener('change', function() {
+        var files = fileInput.files;
+        if (!files || !files.length) return;
+        var pending = files.length;
+        Array.prototype.forEach.call(files, function(file) {
+          var reader = new FileReader();
+          reader.onload = function(ev) {
+            var img = new Image();
+            img.onload = function() {
+              var maxW = 400;
+              var scale = Math.min(1, maxW / img.width);
+              var w = Math.round(img.width * scale);
+              var h = Math.round(img.height * scale);
+              var canvas = document.createElement('canvas');
+              canvas.width = w; canvas.height = h;
+              var ctx = canvas.getContext('2d');
+              ctx.drawImage(img, 0, 0, w, h);
+              var thumb = canvas.toDataURL('image/jpeg', 0.7);
+              item._photosNew.push(thumb);
+              pending--;
+              if (pending === 0) {
+                refreshEditPreview(card, item, label);
+              }
+            };
+            img.src = ev.target.result;
+          };
+          reader.readAsDataURL(file);
+        });
+        fileInput.value = '';
+      });
+    }
+
+    card.querySelector('.edit-save-btn').addEventListener('click', function(e) {
+      e.stopPropagation();
+      item.date = card.querySelector('.edit-date').value;
+      item.note = card.querySelector('.edit-note').value.trim();
+      item.photos = item._photosNew.slice();
+      delete item._photosNew;
+      visitedCities[item.prov][item.city] = { date: item.date, note: item.note, photos: item.photos };
+      saveVisited();
+      if (currentLevel === 'country') showCountry();
+      else if (currentLevel === 'city' && currentProvince === item.prov) {
+        var geo = cityGeoCache[item.prov];
+        if (geo) renderCityMap(item.prov, geo);
+      }
+      renderCards();
+      updateCounts();
+    });
+
+    card.querySelector('.edit-cancel-btn').addEventListener('click', function(e) {
+      e.stopPropagation();
+      delete item._photosNew;
+      renderCards();
+      updateCounts();
+    });
+
+    // 绑定照片删除按钮
+    var removeBtns = card.querySelectorAll('.edit-photo-remove');
+    removeBtns.forEach(function(btn) {
+      btn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        var idx = parseInt(btn.dataset.idx);
+        if (idx >= 0 && idx < item._photosNew.length) {
+          item._photosNew.splice(idx, 1);
+          refreshEditPreview(card, item, label);
+        }
+      });
+    });
+  }
+
+  function refreshEditPreview(card, item, label) {
+    var grid = card.querySelector('.edit-photos-grid');
+    var countLabel = card.querySelector('.edit-photo-count');
+    if (grid) {
+      var html = '';
+      item._photosNew.forEach(function(src, idx) {
+        html += '<div style="position:relative;display:inline-block;">';
+        html += '<img src="' + escapeHtml(src) + '" style="height:70px;border-radius:8px;border:1px solid #eee;">';
+        html += '<span class="edit-photo-remove" data-idx="' + idx + '" style="position:absolute;top:-6px;right:-6px;width:20px;height:20px;border-radius:50%;background:#e53935;color:#fff;font-size:12px;line-height:20px;text-align:center;cursor:pointer;" title="删除此照片">✕</span>';
+        html += '</div>';
+      });
+      grid.innerHTML = html;
+      // 重新绑定删除按钮
+      var removeBtns = grid.querySelectorAll('.edit-photo-remove');
+      removeBtns.forEach(function(btn) {
+        btn.addEventListener('click', function(e) {
+          e.stopPropagation();
+          var idx = parseInt(btn.dataset.idx);
+          if (idx >= 0 && idx < item._photosNew.length) {
+            item._photosNew.splice(idx, 1);
+            refreshEditPreview(card, item, label);
+          }
+        });
+      });
+    }
+    if (countLabel) {
+      countLabel.textContent = item._photosNew.length + ' 张照片';
+    }
+  }
+
+  // 窗口大小变化时重绘
+  window.addEventListener('resize', function() { chart.resize(); });
+})();
+
+// ===== 美食 & 玩乐 =====
+function addCard(section) {
+  var nameInput = document.getElementById(section + '-name');
+  var noteInput = document.getElementById(section + '-note');
+  var dateInput = document.getElementById(section + '-date');
+  var name = nameInput.value.trim();
+  if (!name) return;
+  var note = noteInput.value.trim();
+  var date = dateInput.value || new Date().toISOString().slice(0,10);
+
+  var emojis = {
+    food: ['🍕','🍔','🍱','🍜','🍰','🍩','🥘','🍿','🍦','🧋','🥗','🍝','🍤','🥩','🧁'],
+    play: ['🎬','🎤','🎮','🏀','🎡','🃏','🎨','🏕️','🛍️','🎵','🎯','🎳','🏓','🧩','🎪']
+  };
+  var emoji = emojis[section][Math.floor(Math.random() * emojis[section].length)];
+
+  var card = document.createElement('div');
+  card.className = 'card';
+  if (section === 'play') card.style.borderLeftColor = '#7c4dff';
+
+  var extraHtml = '';
+  if (section === 'food') {
+    var rating = document.getElementById('food-rating').value;
+    if (rating) extraHtml += '<div class="card-rating">' + '⭐'.repeat(parseInt(rating)) + '</div>';
+  }
+  if (section === 'play') {
+    var type = document.getElementById('play-type').value;
+    if (type) extraHtml += '<div class="card-location">' + type + '</div>';
+  }
+
+  card.innerHTML =
+    '<div class="emoji">' + emoji + '</div>' +
+    '<div class="card-title">' + escapeHtml(name) + '</div>' +
+    '<div class="card-date">' + date + '</div>' +
+    (note ? '<div class="card-note">' + escapeHtml(note) + '</div>' : '') +
+    extraHtml +
+    '<button class="delete-btn" onclick="this.parentElement.remove();updateCounts()">✕</button>';
+
+  document.getElementById(section + '-cards').appendChild(card);
+  nameInput.value = '';
+  noteInput.value = '';
+  dateInput.value = '';
+  if (section === 'food') document.getElementById('food-rating').value = '';
+  if (section === 'play') document.getElementById('play-type').value = '';
+  updateCounts();
+}
+
+function escapeHtml(str) {
+  var div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+function updateCounts() {
+  document.getElementById('food-count').textContent =
+    document.querySelectorAll('#food-cards .card').length;
+  document.getElementById('play-count').textContent =
+    document.querySelectorAll('#play-cards .card').length;
+  document.getElementById('travel-count').textContent =
+    document.querySelectorAll('#travel-cards .city-card').length;
+
+  var foodCards = document.querySelectorAll('#food-cards .card').length;
+  var playCards = document.querySelectorAll('#play-cards .card').length;
+  var foodEmpty = document.getElementById('food-empty');
+  var playEmpty = document.getElementById('play-empty');
+  if (foodEmpty) foodEmpty.style.display = foodCards === 0 ? 'block' : 'none';
+  if (playEmpty) playEmpty.style.display = playCards === 0 ? 'block' : 'none';
+}
+
+document.getElementById('add-food-btn').addEventListener('click', function() { addCard('food'); });
+document.getElementById('add-play-btn').addEventListener('click', function() { addCard('play'); });
+
+['food-name','food-note','play-name','play-note'].forEach(function(id) {
+  document.getElementById(id).addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') {
+      addCard(id.startsWith('food') ? 'food' : 'play');
+    }
+  });
+});
+
+updateCounts();
+</script>
+</body>
+</html>
