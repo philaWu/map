@@ -1510,7 +1510,7 @@ function pushDataJson(token, owner, repo, path, sha, ver, travel, food, play, re
       .then(function(r) { return r.json(); })
       .then(function(file) {
         if (!file.sha) throw new Error('Failed to re-fetch for retry');
-        var current = JSON.parse(atob(file.content));
+        var current = JSON.parse(decodeURIComponent(escape(atob(file.content))));
         // Merge our cleaned travel into the latest remote
         var mergedTravel = JSON.parse(JSON.stringify(travel));
         Object.keys(current.travel).forEach(function(prov) {
@@ -1592,7 +1592,7 @@ function syncToCloud() {
   })
   .then(function(r) { return r.json(); })
   .then(function(file) {
-    var current = JSON.parse(atob(file.content));
+    var current = JSON.parse(decodeURIComponent(escape(atob(file.content))));
     newVer = (current.version || 0) + 1;
 
     // Merge travel — for existing cities, merge photo/date/note data
