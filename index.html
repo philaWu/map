@@ -915,7 +915,7 @@ document.querySelectorAll('.tab').forEach(function(tab) {
         var imgH = isDetail ? 'max-height:300px;object-fit:contain;' : 'height:70px;object-fit:cover;';
         html += '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;">';
         photos.forEach(function(src) {
-          html += '<img src="' + escapeHtml(src) + '" loading="lazy" onerror="this.style.display=\'none\'" style="' + imgH + 'border-radius:8px;border:1px solid #eee;cursor:pointer;" onclick="event.stopPropagation();window.open(this.src)">';
+          html += '<img src="' + escapeHtml(src) + '" loading="lazy" onerror="this.alt=\'🖼️ 图片加载失败\';this.style.minWidth=\'80px\';this.style.background=\'#f5f5f5\';this.style.display=\'flex\';this.style.alignItems=\'center\';this.style.justifyContent=\'center\';this.style.fontSize=\'12px\';this.style.color=\'#999\'" style="' + imgH + 'border-radius:8px;border:1px solid #eee;cursor:pointer;" onclick="event.stopPropagation();window.open(this.src)">';
         });
         html += '</div>';
       }
@@ -973,7 +973,7 @@ document.querySelectorAll('.tab').forEach(function(tab) {
           reader.onload = function(ev) {
             var img = new Image();
             img.onload = function() {
-              var maxW = 400;
+              var maxW = 300;
               var scale = Math.min(1, maxW / img.width);
               var w = Math.round(img.width * scale);
               var h = Math.round(img.height * scale);
@@ -981,7 +981,7 @@ document.querySelectorAll('.tab').forEach(function(tab) {
               canvas.width = w; canvas.height = h;
               var ctx = canvas.getContext('2d');
               ctx.drawImage(img, 0, 0, w, h);
-              var thumb = canvas.toDataURL('image/jpeg', 0.7);
+              var thumb = canvas.toDataURL('image/jpeg', 0.5);
               item._photosNew.push(thumb);
               pending--;
               if (pending === 0) {
