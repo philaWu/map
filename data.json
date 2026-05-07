@@ -1,6 +1,27 @@
 {
-  "version": 4,
+  "version": 5,
   "travel": {
+    "江苏省": {
+      "盐城市": {
+        "date": "",
+        "note": "",
+        "photos": [
+          "photos/1778157610433164_5Sdkvw.jpg"
+        ]
+      },
+      "苏州市": {
+        "date": "",
+        "note": "",
+        "photos": []
+      },
+      "常州市": {
+        "date": "",
+        "note": "",
+        "photos": [
+          "photos/1778158039385_5oxxvj.jpg"
+        ]
+      }
+    },
     "上海市": {
       "浦东新区": {
         "date": "",
@@ -15,22 +36,6 @@
         "note": "",
         "photos": [],
         "transport": "plane"
-      }
-    },
-    "江苏省": {
-      "盐城市": {
-        "date": "",
-        "note": "",
-        "photos": [
-          "photos/1778157610433164_5Sdkvw.jpg"
-        ],
-        "transport": "train"
-      },
-      "苏州市": {
-        "date": "",
-        "note": "",
-        "photos": [],
-        "transport": "car"
       }
     },
     "河南省": {
