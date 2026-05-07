@@ -1426,6 +1426,67 @@ function showSettings() {
   document.body.appendChild(overlay);
 }
 
+// Upload a single base64 photo to GitHub, return the relative path
+function uploadPhotoToGitHub(token, owner, repo, base64Data) {
+  var parts = base64Data.split(',');
+  var base64Content = parts.length === 2 ? parts[1] : parts[0];
+  var ext = 'jpg';
+  if (parts.length === 2 && parts[0].indexOf('image/png') !== -1) ext = 'png';
+  var filename = Date.now() + '_' + Math.random().toString(36).substr(2, 6) + '.' + ext;
+  return fetch('https://api.github.com/repos/' + owner + '/' + repo + '/contents/photos/' + filename, {
+    method: 'PUT',
+    headers: { Authorization: 'token ' + token, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ message: 'Upload photo ' + filename, content: base64Content })
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(result) {
+    if (result.content) return 'photos/' + filename;
+    throw new Error(result.message || 'Photo upload failed');
+  });
+}
+
+// Process travel data: upload all base64 photos to GitHub, replace with paths
+function processTravelPhotos(token, owner, repo, travelData, statusFn) {
+  var uploads = {}; // base64 → promise(path)
+  var total = 0;
+  Object.keys(travelData).forEach(function(prov) {
+    Object.keys(travelData[prov]).forEach(function(city) {
+      var info = travelData[prov][city];
+      if (info.photos) {
+        for (var i = 0; i < info.photos.length; i++) {
+          if (info.photos[i].indexOf('data:') === 0) {
+            total++;
+            var b64 = info.photos[i];
+            if (!uploads[b64]) {
+              uploads[b64] = uploadPhotoToGitHub(token, owner, repo, b64);
+            }
+          }
+        }
+      }
+    });
+  });
+  var keys = Object.keys(uploads);
+  if (keys.length === 0) return Promise.resolve(travelData);
+  if (statusFn) statusFn('📷 上传 ' + keys.length + ' 张照片...');
+  return Promise.all(keys.map(function(k) { return uploads[k]; }))
+  .then(function(paths) {
+    var map = {};
+    keys.forEach(function(k, i) { map[k] = paths[i]; });
+    // Replace base64 with paths
+    Object.keys(travelData).forEach(function(prov) {
+      Object.keys(travelData[prov]).forEach(function(city) {
+        var info = travelData[prov][city];
+        if (info.photos) {
+          info.photos = info.photos.map(function(p) {
+            return p.indexOf('data:') === 0 ? (map[p] || p) : p;
+          });
+        }
+      });
+    });
+    return travelData;
+  });
+}
+
 function syncToCloud() {
   var token = localStorage.getItem('gh_token');
   if (!token) { alert('请先点击 ⚙️ 设置 输入 GitHub Token'); showSettings(); return; }
@@ -1472,7 +1533,6 @@ function syncToCloud() {
     var current = JSON.parse(atob(file.content));
     newVer = (current.version || 0) + 1;
 
-    // Merge: local edits take priority, but don't lose remote additions
     // Merge travel — for existing cities, merge photo/date/note data
     var mergedTravel = JSON.parse(JSON.stringify(t));
     Object.keys(current.travel).forEach(function(prov) {
@@ -1492,40 +1552,45 @@ function syncToCloud() {
       });
     });
 
-    // Merge food
+    // Merge food / play
     var mergedFood = food.slice();
     var foodTitles = mergedFood.map(function(f) { return f.title; });
     (current.food || []).forEach(function(f) {
       if (foodTitles.indexOf(f.title) === -1) { mergedFood.push(f); }
     });
-
-    // Merge play
     var mergedPlay = play.slice();
     var playTitles = mergedPlay.map(function(p) { return p.title; });
     (current.play || []).forEach(function(p) {
       if (playTitles.indexOf(p.title) === -1) { mergedPlay.push(p); }
     });
 
-    var newData = { version: newVer, travel: mergedTravel, food: mergedFood, play: mergedPlay };
-    var jsonStr = JSON.stringify(newData, null, 2);
-    var content = btoa(unescape(encodeURIComponent(jsonStr)));
-
-    return fetch('https://api.github.com/repos/' + owner + '/' + repo + '/contents/' + path, {
-      method: 'PUT',
-      headers: { Authorization: 'token ' + token, 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        message: 'Update data.json v' + newVer,
-        content: content,
-        sha: file.sha
-      })
+    // Upload base64 photos to GitHub as files, replace with paths
+    return processTravelPhotos(token, owner, repo, mergedTravel, function(msg) {
+      btn.textContent = msg;
+    }).then(function(cleanTravel) {
+      // Save clean data to localStorage (paths instead of base64)
+      try {
+        localStorage.setItem('couple_travel_cities_v3', JSON.stringify(cleanTravel));
+      } catch(e) {}
+      var newData = { version: newVer, travel: cleanTravel, food: mergedFood, play: mergedPlay };
+      var jsonStr = JSON.stringify(newData, null, 2);
+      var content = btoa(unescape(encodeURIComponent(jsonStr)));
+      return fetch('https://api.github.com/repos/' + owner + '/' + repo + '/contents/' + path, {
+        method: 'PUT',
+        headers: { Authorization: 'token ' + token, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: 'Update data.json v' + newVer,
+          content: content,
+          sha: file.sha
+        })
+      }).then(function(r) { return r.json(); });
     });
   })
-  .then(function(r) { return r.json(); })
   .then(function(result) {
     if (result.content) {
       localStorage.setItem('couple_data_version', newVer);
       btn.textContent = '✅ 已同步!';
-      setTimeout(function() { btn.textContent = '☁️ 同步到云端'; btn.disabled = false; }, 2000);
+      setTimeout(function() { location.reload(); }, 1000);
     } else {
       throw new Error(result.message || 'Unknown error');
     }
