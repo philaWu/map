@@ -742,11 +742,9 @@ document.querySelectorAll('.tab').forEach(function(tab) {
       series.push({
         type: 'lines',
         coordinateSystem: 'geo',
-        polyline: false,
         data: arcData,
-        silent: true,
-        lineStyle: { curveness: 0.2, color: '#e91e63', width: 3, opacity: 1 },
-        effect: { show: true, period: 6, trailLength: 0, symbol: 'arrow', symbolSize: 8, color: '#e91e63' },
+        lineStyle: { curveness: 0.2, color: '#b71c1c', width: 5, opacity: 1, type: 'solid' },
+        effect: { show: true, period: 6, trailLength: 0.1, symbol: 'arrow', symbolSize: 10, color: '#e91e63' },
         zlevel: 3
       });
     }
