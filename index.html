@@ -739,11 +739,11 @@ document.querySelectorAll('.tab').forEach(function(tab) {
       zlevel: 2
     });
 
-    // Transport mode colors, labels and symbols
+    // Transport mode colors, labels and custom SVG path symbols
     var transportStyles = {
-      car:   { color: '#43a047', label: '🚗 汽车', symbol: 'triangle' },
-      train: { color: '#fb8c00', label: '🚄 高铁', symbol: 'rect' },
-      plane: { color: '#1e88e5', label: '✈️ 飞机', symbol: 'diamond' }
+      car:   { color: '#43a047', label: '🚗 汽车', symbol: 'path://M2,9 L2,6 L4,6 L6,3 L10,3 L12,6 L14,6 L14,9 Z' },
+      train: { color: '#fb8c00', label: '🚄 高铁', symbol: 'path://M0,7 L4,4 L5,1 L9,1 L11,3 L14,3 L14,7 Z' },
+      plane: { color: '#1e88e5', label: '✈️ 飞机', symbol: 'path://M7,0 L10,5 L14,8 L10,8 L7,4 L4,8 L0,8 L4,5 Z' }
     };
 
     // Add arc lines per transport mode
@@ -756,7 +756,7 @@ document.querySelectorAll('.tab').forEach(function(tab) {
           coordinateSystem: 'geo',
           data: arcByTransport[mode],
           lineStyle: { curveness: 0.25, color: style.color, width: 2.5, opacity: 0.9 },
-          effect: { show: true, period: 5, symbol: style.symbol, symbolSize: 7, color: style.color, trailLength: 0.25 },
+          effect: { show: true, period: 5, symbol: style.symbol, symbolSize: 10, color: style.color, trailLength: 0.25 },
           zlevel: 1
         });
       }
